@@ -33,11 +33,13 @@
       "packages/*"
     ],
     "catalog": {
+      "@tauri-apps/api": "2.11.0",
       "@types/node": "^24.12.0",
       "@types/react": "^19.2.14",
       "@types/react-dom": "^19.2.3",
       "react": "^19.2.4",
       "react-dom": "^19.2.4",
+      "shadcn": "4.7.0",
       "typescript": "~5.9.3",
       "vitest": "4.1.5"
     }
@@ -48,6 +50,8 @@
     "dev": "turbo run dev",
     "dev:desktop": "turbo run dev --filter=@rune/desktop",
     "dev:mcp": "turbo run dev --filter=@rune/mcp",
+    "tauri:dev": "bun --cwd apps/desktop run tauri:dev",
+    "tauri:build": "bun --cwd apps/desktop run tauri:build",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "lint": "oxlint --report-unused-disable-directives",
