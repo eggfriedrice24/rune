@@ -121,8 +121,15 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body,
+  #root {
+    background-color: transparent;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
@@ -130,5 +137,13 @@
   }
   html {
     @apply font-sans;
+  }
+
+  /* Vibrancy: panels become translucent so the body's blurred desktop shows through. */
+  [data-slot="sidebar-inner"] {
+    background-color: color-mix(in oklch, var(--sidebar) 70%, transparent) !important;
+  }
+  [data-slot="sidebar-inset"] {
+    background-color: color-mix(in oklch, var(--background) 70%, transparent) !important;
   }
 }
