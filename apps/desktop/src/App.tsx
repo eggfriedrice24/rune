@@ -1,20 +1,33 @@
+import * as React from "react";
+
+import { PreviewSidebar } from "@/components/preview-sidebar";
 import { Button } from "@/components/ui/button";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { VaultSidebar } from "@/components/vault-sidebar";
 
 export function App() {
+  const [vaultOpen, setVaultOpen] = React.useState(false);
+  const [previewOpen, setPreviewOpen] = React.useState(false);
+
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+    <SidebarProvider open={vaultOpen} onOpenChange={setVaultOpen}>
+      <VaultSidebar />
+      <SidebarProvider open={previewOpen} onOpenChange={setPreviewOpen}>
+        <SidebarInset className="items-center justify-center gap-4">
+          <div className="text-2xl font-medium">Editor</div>
+          <div className="text-sm text-muted-foreground">CodeMirror 6 will live here.</div>
+          <div className="flex gap-2 pt-4">
+            <Button variant="outline" size="sm" onClick={() => setVaultOpen((v) => !v)}>
+              Toggle Vault
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setPreviewOpen((v) => !v)}>
+              Toggle Preview
+            </Button>
+          </div>
+        </SidebarInset>
+        <PreviewSidebar />
+      </SidebarProvider>
+    </SidebarProvider>
   );
 }
 
