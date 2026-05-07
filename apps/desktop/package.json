@@ -23,6 +23,8 @@
     "@tanstack/hotkeys": "catalog:",
     "@tanstack/react-hotkeys": "catalog:",
     "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-dialog": "catalog:",
+    "@tauri-apps/plugin-fs": "catalog:",
     "@tauri-apps/plugin-store": "catalog:",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
