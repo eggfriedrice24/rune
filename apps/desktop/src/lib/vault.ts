@@ -1,10 +1,9 @@
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
-import type { UnwatchFn } from "@tauri-apps/plugin-fs";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { tauriStoreStorage } from "@/lib/tauri-store-adapter";
-import { readVaultTree, startVaultWatcher } from "@/lib/vault-fs";
+import { readVaultTree } from "@/lib/vault-fs";
 
 export type FileNode = {
   name: string;
@@ -33,19 +32,6 @@ type VaultState = {
   reload: () => Promise<void>;
 };
 
-// Temporarily disabled while diagnosing sidebar-open lag. Set to true to
-// re-enable the recursive fs watcher.
-const WATCHER_ENABLED = false;
-
-let activeWatcher: UnwatchFn | null = null;
-
-function stopActiveWatcher() {
-  if (activeWatcher) {
-    activeWatcher();
-    activeWatcher = null;
-  }
-}
-
 export const useVaultStore = create<VaultState>()(
   persist(
     (set, get) => ({
@@ -62,23 +48,16 @@ export const useVaultStore = create<VaultState>()(
           }
           resolvedPath = selected;
         }
-        stopActiveWatcher();
         set({ vaultPath: resolvedPath, status: "loading", error: null });
         try {
           const tree = await readVaultTree(resolvedPath);
           set({ tree, status: "ready" });
-          if (WATCHER_ENABLED) {
-            activeWatcher = await startVaultWatcher(resolvedPath, () => {
-              void get().reload();
-            });
-          }
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           set({ status: "error", error: message });
         }
       },
       closeVault: () => {
-        stopActiveWatcher();
         set({ vaultPath: null, tree: [], status: "idle", error: null });
       },
       reload: async () => {

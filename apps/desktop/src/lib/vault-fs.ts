@@ -1,4 +1,4 @@
-import { readDir, watch, type UnwatchFn } from "@tauri-apps/plugin-fs";
+import { readDir } from "@tauri-apps/plugin-fs";
 
 import type { VaultNode } from "@/lib/vault";
 
@@ -52,8 +52,4 @@ async function readDirRecursive(path: string): Promise<VaultNode[]> {
 
 export async function readVaultTree(path: string): Promise<VaultNode[]> {
   return readDirRecursive(path);
-}
-
-export async function startVaultWatcher(path: string, onChange: () => void): Promise<UnwatchFn> {
-  return watch(path, () => onChange(), { recursive: true, delayMs: 300 });
 }
