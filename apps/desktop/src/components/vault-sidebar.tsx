@@ -59,7 +59,7 @@ function Tree({ item }: { item: TreeNode }) {
   if (!items.length) {
     return (
       <SidebarMenuButton className="data-[active=true]:bg-transparent">
-        <HugeiconsIcon icon={FileIcon} strokeWidth={2} />
+        <HugeiconsIcon icon={FileIcon} strokeWidth={2} className="text-chart-2" />
         {name}
       </SidebarMenuButton>
     );
@@ -76,9 +76,13 @@ function Tree({ item }: { item: TreeNode }) {
             <HugeiconsIcon
               icon={ArrowRight01Icon}
               strokeWidth={2}
-              className="transition-transform"
+              className="text-muted-foreground transition-transform"
             />
-            <HugeiconsIcon icon={FolderIcon} strokeWidth={2} />
+            <HugeiconsIcon
+              icon={FolderIcon}
+              strokeWidth={2}
+              className="fill-primary text-primary"
+            />
             {name}
           </SidebarMenuButton>
         </CollapsibleTrigger>
