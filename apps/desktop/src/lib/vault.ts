@@ -33,6 +33,10 @@ type VaultState = {
   reload: () => Promise<void>;
 };
 
+// Temporarily disabled while diagnosing sidebar-open lag. Set to true to
+// re-enable the recursive fs watcher.
+const WATCHER_ENABLED = false;
+
 let activeWatcher: UnwatchFn | null = null;
 
 function stopActiveWatcher() {
@@ -63,9 +67,11 @@ export const useVaultStore = create<VaultState>()(
         try {
           const tree = await readVaultTree(resolvedPath);
           set({ tree, status: "ready" });
-          activeWatcher = await startVaultWatcher(resolvedPath, () => {
-            void get().reload();
-          });
+          if (WATCHER_ENABLED) {
+            activeWatcher = await startVaultWatcher(resolvedPath, () => {
+              void get().reload();
+            });
+          }
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           set({ status: "error", error: message });
