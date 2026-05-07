@@ -1,3 +1,5 @@
+import { ArrowRight01Icon, FileIcon, FolderIcon } from "@hugeicons/core-free-icons";
+import { HugeiconsIcon } from "@hugeicons/react";
 import * as React from "react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -6,45 +8,39 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSkeleton,
   SidebarMenuSub,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { ArrowRight01Icon, FileIcon, FolderIcon } from "@hugeicons/core-free-icons";
-import { HugeiconsIcon } from "@hugeicons/react";
+import { useVaultStore, type VaultNode, type VaultStatus } from "@/lib/vault";
 
-type TreeNode = string | [string, ...TreeNode[]];
-
-function nodeName(node: TreeNode): string {
-  return Array.isArray(node) ? node[0] : node;
+function basename(path: string): string {
+  const cleaned = path.replace(/\/+$/, "");
+  const idx = cleaned.lastIndexOf("/");
+  return idx === -1 ? cleaned : cleaned.slice(idx + 1);
 }
 
-const PLACEHOLDER_VAULT: TreeNode[] = [
-  ["inbox", "scratch.md", "todo.md"],
-  ["projects", ["rune", "spec.md", "roadmap.md"], "ideas.md"],
-  ["daily", "2026-05-07.md", "2026-05-06.md"],
-  "README.md",
-];
+export function VaultSidebar(props: React.ComponentProps<typeof Sidebar>) {
+  const vaultPath = useVaultStore((s) => s.vaultPath);
+  const tree = useVaultStore((s) => s.tree);
+  const status = useVaultStore((s) => s.status);
+  const error = useVaultStore((s) => s.error);
 
-export function VaultSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <div className="px-2 py-1.5 text-sm font-medium">Vault</div>
+        <div className="truncate px-2 py-1.5 text-sm font-medium">
+          {vaultPath ? basename(vaultPath) : "Vault"}
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Files</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {PLACEHOLDER_VAULT.map((item) => (
-                <Tree key={nodeName(item)} item={item} />
-              ))}
-            </SidebarMenu>
+            <VaultBody status={status} vaultPath={vaultPath} tree={tree} error={error} />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
@@ -53,14 +49,69 @@ export function VaultSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
   );
 }
 
-function Tree({ item }: { item: TreeNode }) {
-  const [name, ...items] = Array.isArray(item) ? item : [item];
+type VaultBodyProps = {
+  status: VaultStatus;
+  vaultPath: string | null;
+  tree: VaultNode[];
+  error: string | null;
+};
 
-  if (!items.length) {
+function VaultBody({ status, vaultPath, tree, error }: VaultBodyProps) {
+  if (status === "loading") {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuSkeleton showIcon />
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuSkeleton showIcon />
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuSkeleton showIcon />
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuSkeleton showIcon />
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="px-2 py-1 text-xs text-destructive">{error ?? "Failed to load vault."}</div>
+    );
+  }
+
+  if (!vaultPath) {
+    return (
+      <div className="px-2 py-1 text-xs text-muted-foreground">
+        No vault open. Press <kbd className="rounded bg-muted px-1.5 py-0.5">Space</kbd>{" "}
+        <kbd className="rounded bg-muted px-1.5 py-0.5">o</kbd> to open one.
+      </div>
+    );
+  }
+
+  if (tree.length === 0) {
+    return (
+      <div className="px-2 py-1 text-xs text-muted-foreground">Vault is empty (no .md files).</div>
+    );
+  }
+
+  return (
+    <SidebarMenu>
+      {tree.map((node) => (
+        <Tree key={node.path} node={node} />
+      ))}
+    </SidebarMenu>
+  );
+}
+
+function Tree({ node }: { node: VaultNode }) {
+  if (node.type === "file") {
     return (
       <SidebarMenuButton className="data-[active=true]:bg-transparent">
         <HugeiconsIcon icon={FileIcon} strokeWidth={2} className="text-chart-2" />
-        {name}
+        {node.name}
       </SidebarMenuButton>
     );
   }
@@ -83,13 +134,13 @@ function Tree({ item }: { item: TreeNode }) {
               strokeWidth={2}
               className="fill-primary text-primary"
             />
-            {name}
+            {node.name}
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent>
           <SidebarMenuSub>
-            {items.map((subItem) => (
-              <Tree key={nodeName(subItem)} item={subItem} />
+            {node.children.map((child) => (
+              <Tree key={child.path} node={child} />
             ))}
           </SidebarMenuSub>
         </CollapsibleContent>
