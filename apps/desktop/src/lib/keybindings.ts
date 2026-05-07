@@ -3,7 +3,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import { tauriStoreStorage } from "@/lib/tauri-store-adapter";
 
-export type KeybindingId = "vault.toggle" | "preview.toggle" | "reading.toggle";
+export type KeybindingId = "vault.toggle" | "preview.toggle" | "reading.toggle" | "vault.open";
 
 export type KeybindingDefinition = {
   id: KeybindingId;
@@ -28,6 +28,11 @@ export const KEYBINDING_DEFINITIONS: Record<KeybindingId, KeybindingDefinition> 
     label: "Toggle reading mode",
     defaultLeaderSuffix: "r",
   },
+  "vault.open": {
+    id: "vault.open",
+    label: "Open vault",
+    defaultLeaderSuffix: "o",
+  },
 };
 
 const DEFAULT_LEADER = "Space";
@@ -36,6 +41,7 @@ const DEFAULT_BINDINGS: Record<KeybindingId, string> = {
   "vault.toggle": "b",
   "preview.toggle": "p",
   "reading.toggle": "r",
+  "vault.open": "o",
 };
 
 type KeybindingsState = {
