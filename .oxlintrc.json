@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "ignorePatterns": [
+    "dist",
+    "node_modules",
+    "bun.lock",
+    "*.tsbuildinfo",
+    "src-tauri/target",
+    "src-tauri/gen"
+  ],
+  "plugins": ["eslint", "oxc", "react", "unicorn", "typescript"],
+  "options": {
+    "typeAware": true
+  },
+  "categories": {
+    "correctness": "warn",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "rules": {
+    "react-in-jsx-scope": "off",
+    "eslint/no-shadow": "off",
+    "eslint/no-await-in-loop": "off",
+    "typescript/no-floating-promises": "warn",
+    "typescript/no-misused-spread": "warn"
+  }
+}
