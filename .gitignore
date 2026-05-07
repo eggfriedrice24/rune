@@ -1,0 +1,75 @@
+# Dependencies
+node_modules
+.bun
+
+# Build outputs
+dist
+ts-dist
+build
+out
+release
+*.tsbuildinfo
+*.bun-build
+*.tgz
+*.tar.gz
+
+# Caches
+.turbo
+.vitest-*
+.eslintcache
+.oxlintcache
+coverage
+.nyc_output
+*.lcov
+
+# Tauri / Rust
+# Note: src-tauri/Cargo.lock is intentionally tracked (binary project).
+target
+src-tauri/target
+src-tauri/gen/schemas
+src-tauri/WixTools
+src-tauri/.cargo/registry
+src-tauri/.cargo/git
+**/*.rs.bk
+
+# Tauri signing & updater secrets
+.tauri-signing-key
+.tauri-signing-key.pub
+*.tauri-key
+*.p12
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+bun-debug.log*
+npm-debug.log*
+yarn-error.log*
+logs
+
+# Editor / IDE
+.idea
+.vscode
+*.code-workspace
+*.swp
+*.swo
+*~
+.history
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+
+# Misc
+tmp
+playground
+.direnv
+.worktrees
+.serena
+__screenshots__
