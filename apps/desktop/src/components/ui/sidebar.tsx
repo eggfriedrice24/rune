@@ -27,6 +27,10 @@ const SIDEBAR_WIDTH_ICON = "3rem";
 
 type SidebarStyle = React.CSSProperties & Record<`--${string}`, string>;
 
+function sidebarStyle(style: SidebarStyle) {
+  return style;
+}
+
 type SidebarContextProps = {
   state: "expanded" | "collapsed";
   open: boolean;
@@ -164,7 +168,7 @@ function Sidebar({
           data-slot="sidebar"
           data-mobile="true"
           className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-          style={{ "--sidebar-width": SIDEBAR_WIDTH_MOBILE } satisfies SidebarStyle}
+          style={sidebarStyle({ "--sidebar-width": SIDEBAR_WIDTH_MOBILE })}
           side={side}
         >
           <SheetHeader className="sr-only">
@@ -560,7 +564,7 @@ function SidebarMenuSkeleton({
       <Skeleton
         className="h-4 max-w-(--skeleton-width) flex-1"
         data-sidebar="menu-skeleton-text"
-        style={{ "--skeleton-width": width } satisfies SidebarStyle}
+        style={sidebarStyle({ "--skeleton-width": width })}
       />
     </div>
   );
