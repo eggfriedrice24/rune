@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@codemirror/lang-markdown": "catalog:",
+    "@codemirror/language-data": "catalog:",
     "@codemirror/theme-one-dark": "catalog:",
     "@fontsource-variable/inter": "catalog:",
     "@hugeicons/core-free-icons": "catalog:",
@@ -38,6 +39,7 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-resizable-panels": "catalog:",
+    "rehype-highlight": "catalog:",
     "rehype-stringify": "catalog:",
     "remark-gfm": "catalog:",
     "remark-parse": "catalog:",

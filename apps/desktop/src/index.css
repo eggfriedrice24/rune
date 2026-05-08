@@ -81,6 +81,14 @@
   --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
   --sidebar-border: oklch(0.925 0.005 214.3);
   --sidebar-ring: oklch(0.723 0.014 214.4);
+  --syntax-foreground: oklch(0.278 0.008 223.9);
+  --syntax-comment: oklch(0.56 0.021 213.5);
+  --syntax-keyword: oklch(0.55 0.2 348);
+  --syntax-string: oklch(0.48 0.15 148);
+  --syntax-number: oklch(0.58 0.18 52);
+  --syntax-function: oklch(0.48 0.16 255);
+  --syntax-type: oklch(0.5 0.14 288);
+  --syntax-operator: oklch(0.42 0.095 57.708);
 }
 
 .dark {
@@ -115,6 +123,14 @@
   --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.56 0.021 213.5);
+  --syntax-foreground: oklch(0.86 0.015 214.4);
+  --syntax-comment: oklch(0.62 0.022 213.5);
+  --syntax-keyword: oklch(0.74 0.19 350);
+  --syntax-string: oklch(0.78 0.16 148);
+  --syntax-number: oklch(0.77 0.16 70);
+  --syntax-function: oklch(0.74 0.14 255);
+  --syntax-type: oklch(0.78 0.13 288);
+  --syntax-operator: oklch(0.84 0.18 86.047);
 }
 
 @layer base {
@@ -232,7 +248,54 @@
 
   .rune-preview pre code {
     background-color: transparent;
+    color: var(--syntax-foreground);
     padding: 0;
+  }
+
+  .rune-preview .hljs-comment,
+  .rune-preview .hljs-quote {
+    color: var(--syntax-comment);
+    font-style: italic;
+  }
+
+  .rune-preview .hljs-keyword,
+  .rune-preview .hljs-selector-tag,
+  .rune-preview .hljs-subst {
+    color: var(--syntax-keyword);
+  }
+
+  .rune-preview .hljs-string,
+  .rune-preview .hljs-doctag,
+  .rune-preview .hljs-regexp,
+  .rune-preview .hljs-template-variable {
+    color: var(--syntax-string);
+  }
+
+  .rune-preview .hljs-number,
+  .rune-preview .hljs-literal,
+  .rune-preview .hljs-symbol,
+  .rune-preview .hljs-bullet {
+    color: var(--syntax-number);
+  }
+
+  .rune-preview .hljs-title,
+  .rune-preview .hljs-title.function_,
+  .rune-preview .hljs-section {
+    color: var(--syntax-function);
+  }
+
+  .rune-preview .hljs-type,
+  .rune-preview .hljs-class .hljs-title,
+  .rune-preview .hljs-built_in {
+    color: var(--syntax-type);
+  }
+
+  .rune-preview .hljs-operator,
+  .rune-preview .hljs-punctuation,
+  .rune-preview .hljs-attr,
+  .rune-preview .hljs-attribute,
+  .rune-preview .hljs-variable {
+    color: var(--syntax-operator);
   }
 
   .rune-preview hr {

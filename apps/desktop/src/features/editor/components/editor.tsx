@@ -1,4 +1,5 @@
 import { markdown } from "@codemirror/lang-markdown";
+import { languages } from "@codemirror/language-data";
 import { vim } from "@replit/codemirror-vim";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { basename } from "@rune/core";
@@ -9,7 +10,7 @@ import { useTheme } from "@/components/theme-provider";
 import { useEditorSettingsStore } from "@/features/editor/store/editor-settings";
 import { useEditorStore } from "@/features/editor/store/editor";
 
-const BASE_EXTENSIONS = [markdown(), EditorView.lineWrapping];
+const BASE_EXTENSIONS = [markdown({ codeLanguages: languages }), EditorView.lineWrapping];
 const VIM_EXTENSION = vim();
 
 function resolvedTheme(): "light" | "dark" {
