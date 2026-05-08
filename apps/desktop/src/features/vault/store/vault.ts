@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 import { joinPath, type VaultNode, type VaultStatus } from "@rune/core";
+import { useEditorStore } from "@/features/editor/store/editor";
 import { readVaultTree } from "@/features/vault/lib/vault-fs";
 import { useRecentVaultsStore } from "@/features/vault/store/recent-vaults";
 import { tauriStoreStorage } from "@/lib/tauri-store-adapter";
@@ -34,6 +35,7 @@ export const useVaultStore = create<VaultState>()(
       status: "idle",
       error: null,
       openVault: async (path) => {
+        const currentVaultPath = get().vaultPath;
         let resolvedPath = path;
         if (!resolvedPath) {
           const selected = await openDialog({ directory: true });
@@ -41,6 +43,9 @@ export const useVaultStore = create<VaultState>()(
             return;
           }
           resolvedPath = selected;
+        }
+        if (resolvedPath !== currentVaultPath) {
+          useEditorStore.getState().reset();
         }
         set({ vaultPath: resolvedPath, status: "loading", error: null });
         try {
@@ -57,6 +62,7 @@ export const useVaultStore = create<VaultState>()(
         }
       },
       closeVault: () => {
+        useEditorStore.getState().reset();
         set({ vaultPath: null, tree: [], status: "idle", error: null });
       },
       reload: async () => {

@@ -17,6 +17,7 @@ import {
   SidebarMenuSub,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useEditorStore } from "@/features/editor/store/editor";
 import { VaultSwitcher } from "@/features/vault/components/vault-switcher";
 import { useVaultStore } from "@/features/vault/store/vault";
 
@@ -25,6 +26,8 @@ export function VaultSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const tree = useVaultStore((s) => s.tree);
   const status = useVaultStore((s) => s.status);
   const error = useVaultStore((s) => s.error);
+  const currentFilePath = useEditorStore((state) => state.currentFilePath);
+  const openFile = useEditorStore((state) => state.openFile);
 
   return (
     <Sidebar {...props}>
@@ -34,7 +37,14 @@ export function VaultSidebar(props: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <VaultBody status={status} vaultPath={vaultPath} tree={tree} error={error} />
+            <VaultBody
+              status={status}
+              vaultPath={vaultPath}
+              tree={tree}
+              error={error}
+              currentFilePath={currentFilePath}
+              openFile={openFile}
+            />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
@@ -48,9 +58,11 @@ type VaultBodyProps = {
   vaultPath: string | null;
   tree: VaultNode[];
   error: string | null;
+  currentFilePath: string | null;
+  openFile: (path: string) => Promise<void>;
 };
 
-function VaultBody({ status, vaultPath, tree, error }: VaultBodyProps) {
+function VaultBody({ status, vaultPath, tree, error, currentFilePath, openFile }: VaultBodyProps) {
   if (status === "loading") {
     return (
       <SidebarMenu>
@@ -94,16 +106,27 @@ function VaultBody({ status, vaultPath, tree, error }: VaultBodyProps) {
   return (
     <SidebarMenu>
       {tree.map((node) => (
-        <Tree key={node.path} node={node} />
+        <Tree key={node.path} node={node} currentFilePath={currentFilePath} openFile={openFile} />
       ))}
     </SidebarMenu>
   );
 }
 
-function Tree({ node }: { node: VaultNode }) {
+type TreeProps = {
+  node: VaultNode;
+  currentFilePath: string | null;
+  openFile: (path: string) => Promise<void>;
+};
+
+function Tree({ node, currentFilePath, openFile }: TreeProps) {
   if (node.type === "file") {
     return (
-      <SidebarMenuButton className="data-[active=true]:bg-transparent">
+      <SidebarMenuButton
+        type="button"
+        isActive={currentFilePath === node.path}
+        className="data-[active=true]:bg-sidebar-accent"
+        onClick={() => void openFile(node.path)}
+      >
         <HugeiconsIcon icon={FileIcon} strokeWidth={2} className="text-chart-2" />
         {nodeName(node)}
       </SidebarMenuButton>
@@ -134,7 +157,12 @@ function Tree({ node }: { node: VaultNode }) {
         <CollapsibleContent>
           <SidebarMenuSub>
             {node.children.map((child) => (
-              <Tree key={child.path} node={child} />
+              <Tree
+                key={child.path}
+                node={child}
+                currentFilePath={currentFilePath}
+                openFile={openFile}
+              />
             ))}
           </SidebarMenuSub>
         </CollapsibleContent>

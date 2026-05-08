@@ -1,0 +1,79 @@
+import { readTextFile, rename, writeTextFile } from "@tauri-apps/plugin-fs";
+import { create } from "zustand";
+
+type EditorStatus = "idle" | "loading" | "ready" | "saving" | "error";
+
+type EditorState = {
+  currentFilePath: string | null;
+  content: string;
+  isDirty: boolean;
+  status: EditorStatus;
+  error: string | null;
+  openFile: (path: string) => Promise<void>;
+  updateContent: (content: string) => void;
+  saveCurrentFile: () => Promise<boolean>;
+  reset: () => void;
+};
+
+export const useEditorStore = create<EditorState>()((set, get) => ({
+  currentFilePath: null,
+  content: "",
+  isDirty: false,
+  status: "idle",
+  error: null,
+  openFile: async (path) => {
+    const currentState = get();
+    if (path === currentState.currentFilePath && currentState.status !== "error") {
+      return;
+    }
+
+    if (currentState.currentFilePath && currentState.isDirty) {
+      const didSave = await currentState.saveCurrentFile();
+      if (!didSave) {
+        return;
+      }
+    }
+
+    set({ currentFilePath: path, status: "loading", error: null });
+
+    try {
+      const content = await readTextFile(path);
+      set({ currentFilePath: path, content, isDirty: false, status: "ready", error: null });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      set({ status: "error", error: message });
+    }
+  },
+  updateContent: (content) => set({ content, isDirty: true, status: "ready", error: null }),
+  saveCurrentFile: async () => {
+    const currentFilePath = get().currentFilePath;
+    if (!currentFilePath) {
+      return false;
+    }
+
+    const content = get().content;
+    if (!get().isDirty) {
+      return true;
+    }
+
+    const tempPath = `${currentFilePath}.tmp`;
+    set({ status: "saving", error: null });
+
+    try {
+      await writeTextFile(tempPath, content);
+      await rename(tempPath, currentFilePath);
+      set((state) =>
+        state.currentFilePath === currentFilePath && state.content === content
+          ? { isDirty: false, status: "ready", error: null }
+          : { status: "ready", error: null },
+      );
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      set({ status: "error", error: message });
+      return false;
+    }
+  },
+  reset: () =>
+    set({ currentFilePath: null, content: "", isDirty: false, status: "idle", error: null }),
+}));

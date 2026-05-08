@@ -5,6 +5,7 @@ import * as React from "react";
 import { PreviewSidebar } from "@/components/preview-sidebar";
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { Editor } from "@/features/editor/components/editor";
 import { VaultSidebar } from "@/features/vault/components/vault-sidebar";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { useVaultStore } from "@/features/vault/store/vault";
@@ -26,29 +27,12 @@ export function App() {
     <SidebarProvider open={vaultOpen} onOpenChange={setVaultOpen}>
       <VaultSidebar />
       <SidebarProvider open={previewOpen} onOpenChange={setPreviewOpen}>
-        <SidebarInset className="items-center justify-center gap-4">
-          {vaultPath ? <EditorPlaceholder /> : <NoVaultCallToAction />}
+        <SidebarInset className={vaultPath ? "min-h-0" : "items-center justify-center gap-4"}>
+          {vaultPath ? <Editor /> : <NoVaultCallToAction />}
         </SidebarInset>
         <PreviewSidebar />
       </SidebarProvider>
     </SidebarProvider>
-  );
-}
-
-function EditorPlaceholder() {
-  return (
-    <>
-      <div className="text-2xl font-medium">Editor</div>
-      <div className="text-sm text-muted-foreground">CodeMirror 6 will live here.</div>
-      <div className="text-xs text-muted-foreground">
-        <kbd className="rounded bg-muted px-1.5 py-0.5">Space</kbd>{" "}
-        <kbd className="rounded bg-muted px-1.5 py-0.5">b</kbd> vault,{" "}
-        <kbd className="rounded bg-muted px-1.5 py-0.5">Space</kbd>{" "}
-        <kbd className="rounded bg-muted px-1.5 py-0.5">p</kbd> preview,{" "}
-        <kbd className="rounded bg-muted px-1.5 py-0.5">Space</kbd>{" "}
-        <kbd className="rounded bg-muted px-1.5 py-0.5">o</kbd> open vault.
-      </div>
-    </>
   );
 }
 
