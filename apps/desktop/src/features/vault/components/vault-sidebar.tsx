@@ -16,13 +16,8 @@ import {
   SidebarMenuSub,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { useVaultStore, type VaultNode, type VaultStatus } from "@/lib/vault";
-
-function basename(path: string): string {
-  const cleaned = path.replace(/\/+$/, "");
-  const idx = cleaned.lastIndexOf("/");
-  return idx === -1 ? cleaned : cleaned.slice(idx + 1);
-}
+import { VaultSwitcher } from "@/features/vault/components/vault-switcher";
+import { useVaultStore, type VaultNode, type VaultStatus } from "@/features/vault/store/vault";
 
 export function VaultSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const vaultPath = useVaultStore((s) => s.vaultPath);
@@ -33,9 +28,7 @@ export function VaultSidebar(props: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <div className="truncate px-2 py-1.5 text-sm font-medium">
-          {vaultPath ? basename(vaultPath) : "Vault"}
-        </div>
+        <VaultSwitcher />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

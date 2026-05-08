@@ -5,9 +5,9 @@ import * as React from "react";
 import { PreviewSidebar } from "@/components/preview-sidebar";
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { VaultSidebar } from "@/components/vault-sidebar";
+import { VaultSidebar } from "@/features/vault/components/vault-sidebar";
 import { useKeybindings } from "@/hooks/use-keybindings";
-import { useVaultStore } from "@/lib/vault";
+import { useVaultStore } from "@/features/vault/store/vault";
 
 export function App() {
   const [vaultOpen, setVaultOpen] = React.useState(false);

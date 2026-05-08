@@ -1,6 +1,6 @@
 import { readDir } from "@tauri-apps/plugin-fs";
 
-import type { VaultNode } from "@/lib/vault";
+import type { VaultNode } from "@/features/vault/store/vault";
 
 const SKIP_NAMES = new Set([".rune", ".git", "node_modules", ".DS_Store"]);
 
@@ -42,7 +42,7 @@ async function readDirRecursive(path: string): Promise<VaultNode[]> {
       return [];
     }),
   );
-  return results.flat().sort((a, b) => {
+  return results.flat().toSorted((a, b) => {
     if (a.type !== b.type) {
       return a.type === "directory" ? -1 : 1;
     }

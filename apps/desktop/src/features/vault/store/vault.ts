@@ -1,9 +1,23 @@
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
+import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { readVaultTree } from "@/features/vault/lib/vault-fs";
+import { useRecentVaultsStore } from "@/features/vault/store/recent-vaults";
 import { tauriStoreStorage } from "@/lib/tauri-store-adapter";
-import { readVaultTree } from "@/lib/vault-fs";
+
+const WELCOME_NOTE = `# Welcome to rune
+
+This is your first note.
+
+- Write Markdown files anywhere in this vault.
+- rune will show them in the sidebar automatically.
+`;
+
+function joinPath(base: string, name: string): string {
+  return base.endsWith("/") ? `${base}${name}` : `${base}/${name}`;
+}
 
 export type FileNode = {
   name: string;
@@ -50,7 +64,12 @@ export const useVaultStore = create<VaultState>()(
         }
         set({ vaultPath: resolvedPath, status: "loading", error: null });
         try {
-          const tree = await readVaultTree(resolvedPath);
+          let tree = await readVaultTree(resolvedPath);
+          if (tree.length === 0) {
+            await writeTextFile(joinPath(resolvedPath, "welcome.md"), WELCOME_NOTE);
+            tree = await readVaultTree(resolvedPath);
+          }
+          useRecentVaultsStore.getState().pushRecent(resolvedPath);
           set({ tree, status: "ready" });
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
