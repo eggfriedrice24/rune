@@ -1,20 +1,38 @@
-import { ArrowRight01Icon, FileIcon, FolderIcon } from "@hugeicons/core-free-icons";
+import {
+  ArrowRight01Icon,
+  FileIcon,
+  FilePlusIcon,
+  FolderAddIcon,
+  FolderIcon,
+} from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { nodeName, type LibraryNode, type LibraryStatus } from "@rune/core";
+import { basename, dirname, nodeName, type LibraryNode, type LibraryStatus } from "@rune/core";
 import * as React from "react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
+  SidebarGroupAction,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { useEditorStore } from "@/features/editor/store/editor";
@@ -26,6 +44,10 @@ export function LibrarySidebar(props: React.ComponentProps<typeof Sidebar>) {
   const tree = useLibraryStore((s) => s.tree);
   const status = useLibraryStore((s) => s.status);
   const error = useLibraryStore((s) => s.error);
+  const selectedNotebookPath = useLibraryStore((s) => s.selectedNotebookPath);
+  const createNote = useLibraryStore((s) => s.createNote);
+  const createNotebook = useLibraryStore((s) => s.createNotebook);
+  const selectNotebook = useLibraryStore((s) => s.selectNotebook);
   const currentFilePath = useEditorStore((state) => state.currentFilePath);
   const openFile = useEditorStore((state) => state.openFile);
 
@@ -36,6 +58,15 @@ export function LibrarySidebar(props: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
+          <SidebarGroupLabel>Notes</SidebarGroupLabel>
+          <LibraryCreateMenu
+            disabled={!libraryPath || status === "loading"}
+            targetLabel={
+              selectedNotebookPath ? `In ${basename(selectedNotebookPath)}` : "In library"
+            }
+            createNote={createNote}
+            createNotebook={createNotebook}
+          />
           <SidebarGroupContent>
             <LibraryBody
               status={status}
@@ -43,7 +74,10 @@ export function LibrarySidebar(props: React.ComponentProps<typeof Sidebar>) {
               tree={tree}
               error={error}
               currentFilePath={currentFilePath}
+              selectedNotebookPath={selectedNotebookPath}
+              createNote={createNote}
               openFile={openFile}
+              selectNotebook={selectNotebook}
             />
           </SidebarGroupContent>
         </SidebarGroup>
@@ -53,13 +87,73 @@ export function LibrarySidebar(props: React.ComponentProps<typeof Sidebar>) {
   );
 }
 
+type LibraryCreateMenuProps = {
+  disabled: boolean;
+  targetLabel: string;
+  createNote: (name: string, parentPath?: string | null) => Promise<void>;
+  createNotebook: (name: string, parentPath?: string | null) => Promise<void>;
+};
+
+function promptForName(label: string) {
+  const name = window.prompt(label);
+  return name?.trim() ? name : null;
+}
+
+function LibraryCreateMenu({
+  disabled,
+  targetLabel,
+  createNote,
+  createNotebook,
+}: LibraryCreateMenuProps) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <SidebarGroupAction type="button" disabled={disabled} title="Create note or notebook">
+          +<span className="sr-only">Create note or notebook</span>
+        </SidebarGroupAction>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent side="right" align="start" className="max-w-sm w-full">
+        <DropdownMenuLabel>{targetLabel}</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuItem
+            onSelect={() => {
+              const name = promptForName("Note name");
+              if (name) {
+                void createNote(name);
+              }
+            }}
+          >
+            <HugeiconsIcon icon={FilePlusIcon} strokeWidth={2} />
+            New note
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => {
+              const name = promptForName("Notebook name");
+              if (name) {
+                void createNotebook(name);
+              }
+            }}
+            className="shrink-0"
+          >
+            <HugeiconsIcon icon={FolderAddIcon} strokeWidth={2} />
+            New notebook
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 type LibraryBodyProps = {
   status: LibraryStatus;
   libraryPath: string | null;
   tree: LibraryNode[];
   error: string | null;
   currentFilePath: string | null;
+  selectedNotebookPath: string | null;
+  createNote: (name: string, parentPath?: string | null) => Promise<void>;
   openFile: (path: string) => Promise<void>;
+  selectNotebook: (path: string | null) => void;
 };
 
 function LibraryBody({
@@ -68,7 +162,10 @@ function LibraryBody({
   tree,
   error,
   currentFilePath,
+  selectedNotebookPath,
+  createNote,
   openFile,
+  selectNotebook,
 }: LibraryBodyProps) {
   if (status === "loading") {
     return (
@@ -115,7 +212,16 @@ function LibraryBody({
   return (
     <SidebarMenu>
       {tree.map((node) => (
-        <Tree key={node.path} node={node} currentFilePath={currentFilePath} openFile={openFile} />
+        <Tree
+          key={node.path}
+          node={node}
+          libraryPath={libraryPath}
+          currentFilePath={currentFilePath}
+          selectedNotebookPath={selectedNotebookPath}
+          createNote={createNote}
+          openFile={openFile}
+          selectNotebook={selectNotebook}
+        />
       ))}
     </SidebarMenu>
   );
@@ -123,18 +229,34 @@ function LibraryBody({
 
 type TreeProps = {
   node: LibraryNode;
+  libraryPath: string;
   currentFilePath: string | null;
+  selectedNotebookPath: string | null;
+  createNote: (name: string, parentPath?: string | null) => Promise<void>;
   openFile: (path: string) => Promise<void>;
+  selectNotebook: (path: string | null) => void;
 };
 
-function Tree({ node, currentFilePath, openFile }: TreeProps) {
+function Tree({
+  node,
+  libraryPath,
+  currentFilePath,
+  selectedNotebookPath,
+  createNote,
+  openFile,
+  selectNotebook,
+}: TreeProps) {
   if (node.type === "file") {
     return (
       <SidebarMenuButton
         type="button"
         isActive={currentFilePath === node.path}
         className="data-[active=true]:bg-sidebar-accent"
-        onClick={() => void openFile(node.path)}
+        onClick={() => {
+          const parentPath = dirname(node.path);
+          selectNotebook(parentPath && parentPath !== libraryPath ? parentPath : null);
+          void openFile(node.path);
+        }}
       >
         <HugeiconsIcon icon={FileIcon} strokeWidth={2} className="text-chart-2" />
         {nodeName(node)}
@@ -142,14 +264,21 @@ function Tree({ node, currentFilePath, openFile }: TreeProps) {
     );
   }
 
+  const isNotebookActive = selectedNotebookPath === node.path;
+  const isCurrentFileInside = dirname(currentFilePath ?? "") === node.path;
+
   return (
     <SidebarMenuItem>
       <Collapsible
         className="group/collapsible [&[data-state=open]>button>svg:first-child]:rotate-90"
-        defaultOpen={false}
+        defaultOpen={isNotebookActive || isCurrentFileInside}
       >
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton>
+          <SidebarMenuButton
+            isActive={isNotebookActive}
+            className="data-[active=true]:bg-sidebar-accent"
+            onClick={() => selectNotebook(node.path)}
+          >
             <HugeiconsIcon
               icon={ArrowRight01Icon}
               strokeWidth={2}
@@ -169,10 +298,30 @@ function Tree({ node, currentFilePath, openFile }: TreeProps) {
               <Tree
                 key={child.path}
                 node={child}
+                libraryPath={libraryPath}
                 currentFilePath={currentFilePath}
+                selectedNotebookPath={selectedNotebookPath}
+                createNote={createNote}
                 openFile={openFile}
+                selectNotebook={selectNotebook}
               />
             ))}
+            <SidebarMenuSubItem>
+              <SidebarMenuSubButton asChild>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const name = promptForName(`Note name in ${nodeName(node)}`);
+                    if (name) {
+                      void createNote(name, node.path);
+                    }
+                  }}
+                >
+                  <HugeiconsIcon icon={FilePlusIcon} strokeWidth={2} />
+                  New note
+                </button>
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
           </SidebarMenuSub>
         </CollapsibleContent>
       </Collapsible>

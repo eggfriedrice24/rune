@@ -40,3 +40,8 @@ export function libraryFolderName(name: string): string | null {
 
   return WINDOWS_RESERVED_NAMES.has(folderName) ? `${folderName}-library` : folderName;
 }
+
+export function noteFileName(name: string): string | null {
+  const fileName = libraryFolderName(name.replace(/\.md$/i, ""));
+  return fileName ? `${fileName}.md` : null;
+}
