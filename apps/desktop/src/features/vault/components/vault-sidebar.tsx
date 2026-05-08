@@ -91,7 +91,7 @@ function VaultBody({ status, vaultPath, tree, error, currentFilePath, openFile }
   if (!vaultPath) {
     return (
       <div className="px-2 py-1 text-xs text-muted-foreground">
-        No vault open. Press <kbd className="rounded bg-muted px-1.5 py-0.5">Space</kbd>{" "}
+        No vault open. Press <kbd className="rounded bg-muted px-1.5 py-0.5">Mod</kbd>{" "}
         <kbd className="rounded bg-muted px-1.5 py-0.5">o</kbd> to open one.
       </div>
     );

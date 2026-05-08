@@ -1,11 +1,10 @@
-import { useHotkeySequences } from "@tanstack/react-hotkeys";
+import { useHotkeys } from "@tanstack/react-hotkeys";
 
 import { KEYBINDING_DEFINITIONS, type KeybindingId, useKeybindingsStore } from "@/lib/keybindings";
 
 type KeybindingHandlers = Partial<Record<KeybindingId, () => void>>;
 
 export function useKeybindings(handlers: KeybindingHandlers) {
-  const leader = useKeybindingsStore((state) => state.leader);
   const bindings = useKeybindingsStore((state) => state.bindings);
 
   const definitions = Object.values(KEYBINDING_DEFINITIONS).flatMap(({ id }) => {
@@ -15,11 +14,11 @@ export function useKeybindings(handlers: KeybindingHandlers) {
     }
     return [
       {
-        sequence: [leader, bindings[id]],
+        hotkey: bindings[id],
         callback: handler,
       },
     ];
   });
 
-  useHotkeySequences(definitions);
+  useHotkeys(definitions);
 }

@@ -146,4 +146,16 @@
   [data-slot="sidebar-inset"] {
     background-color: color-mix(in oklch, var(--background) 70%, transparent) !important;
   }
+
+  .rune-editor,
+  .rune-editor .cm-editor,
+  .rune-editor .cm-scroller,
+  .rune-editor .cm-gutters,
+  .rune-editor .cm-activeLineGutter {
+    background-color: transparent !important;
+  }
+
+  .rune-editor .cm-activeLine {
+    background-color: color-mix(in oklch, var(--accent) 28%, transparent) !important;
+  }
 }

@@ -1,11 +1,16 @@
 import { markdown } from "@codemirror/lang-markdown";
+import { vim } from "@replit/codemirror-vim";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { basename } from "@rune/core";
-import CodeMirror, { EditorView } from "@uiw/react-codemirror";
+import CodeMirror, { EditorView, type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import * as React from "react";
 
 import { useTheme } from "@/components/theme-provider";
+import { useEditorSettingsStore } from "@/features/editor/store/editor-settings";
 import { useEditorStore } from "@/features/editor/store/editor";
+
+const BASE_EXTENSIONS = [markdown(), EditorView.lineWrapping];
+const VIM_EXTENSION = vim();
 
 function resolvedTheme(): "light" | "dark" {
   if (typeof document === "undefined") {
@@ -36,6 +41,7 @@ function statusText(status: "idle" | "loading" | "ready" | "saving" | "error", i
 }
 
 export function Editor() {
+  const editorRef = React.useRef<ReactCodeMirrorRef>(null);
   const { theme } = useTheme();
   const currentFilePath = useEditorStore((state) => state.currentFilePath);
   const content = useEditorStore((state) => state.content);
@@ -44,6 +50,7 @@ export function Editor() {
   const error = useEditorStore((state) => state.error);
   const updateContent = useEditorStore((state) => state.updateContent);
   const saveCurrentFile = useEditorStore((state) => state.saveCurrentFile);
+  const vimModeEnabled = useEditorSettingsStore((state) => state.vimModeEnabled);
 
   React.useEffect(() => {
     if (!currentFilePath || !isDirty) {
@@ -58,6 +65,14 @@ export function Editor() {
       window.clearTimeout(timeout);
     };
   }, [content, currentFilePath, isDirty, saveCurrentFile]);
+
+  React.useEffect(() => {
+    if (!currentFilePath) {
+      return;
+    }
+
+    editorRef.current?.view?.focus();
+  }, [currentFilePath]);
 
   if (!currentFilePath) {
     return (
@@ -81,19 +96,24 @@ export function Editor() {
           <div className="truncate text-sm font-medium">{basename(currentFilePath)}</div>
           <div className="truncate text-xs text-muted-foreground">{currentFilePath}</div>
         </div>
-        <div className="shrink-0 text-xs text-muted-foreground">{statusText(status, isDirty)}</div>
+        <div className="shrink-0 text-xs text-muted-foreground">
+          {vimModeEnabled ? "Vim · " : ""}
+          {statusText(status, isDirty)}
+        </div>
       </div>
       <div className="min-h-0 flex-1 overflow-hidden">
         <CodeMirror
+          ref={editorRef}
           value={content}
           height="100%"
+          autoFocus
           theme={editorTheme === "dark" ? oneDark : "light"}
-          extensions={[markdown(), EditorView.lineWrapping]}
+          extensions={vimModeEnabled ? [VIM_EXTENSION, ...BASE_EXTENSIONS] : BASE_EXTENSIONS}
           basicSetup={{
             foldGutter: false,
           }}
           onChange={updateContent}
-          className="h-full text-sm"
+          className="rune-editor h-full text-sm"
         />
       </div>
       {error ? <div className="border-t px-4 py-2 text-xs text-destructive">{error}</div> : null}

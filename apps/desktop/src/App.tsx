@@ -6,6 +6,7 @@ import { PreviewSidebar } from "@/components/preview-sidebar";
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { Editor } from "@/features/editor/components/editor";
+import { useEditorSettingsStore } from "@/features/editor/store/editor-settings";
 import { VaultSidebar } from "@/features/vault/components/vault-sidebar";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { useVaultStore } from "@/features/vault/store/vault";
@@ -16,8 +17,10 @@ export function App() {
 
   const vaultPath = useVaultStore((s) => s.vaultPath);
   const openVault = useVaultStore((s) => s.openVault);
+  const toggleVimMode = useEditorSettingsStore((state) => state.toggleVimMode);
 
   useKeybindings({
+    "editor.vim.toggle": toggleVimMode,
     "vault.toggle": () => setVaultOpen((open) => !open),
     "preview.toggle": () => setPreviewOpen((open) => !open),
     "vault.open": () => void openVault(),
@@ -50,7 +53,7 @@ function NoVaultCallToAction() {
         Open vault
       </Button>
       <div className="text-xs text-muted-foreground">
-        or press <kbd className="rounded bg-muted px-1.5 py-0.5">Space</kbd>{" "}
+        or press <kbd className="rounded bg-muted px-1.5 py-0.5">Mod</kbd>{" "}
         <kbd className="rounded bg-muted px-1.5 py-0.5">o</kbd>
       </div>
     </>
