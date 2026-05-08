@@ -2,39 +2,38 @@ import { FolderOpenIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
 import * as React from "react";
 
-import { PreviewSidebar } from "@/components/preview-sidebar";
+import { EditorWorkspace } from "@/components/editor-workspace";
 import { Button } from "@/components/ui/button";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { Editor } from "@/features/editor/components/editor";
 import { useEditorSettingsStore } from "@/features/editor/store/editor-settings";
+import { usePreviewStore } from "@/features/preview/store/preview";
 import { VaultSidebar } from "@/features/vault/components/vault-sidebar";
 import { useKeybindings } from "@/hooks/use-keybindings";
 import { useVaultStore } from "@/features/vault/store/vault";
 
 export function App() {
   const [vaultOpen, setVaultOpen] = React.useState(false);
-  const [previewOpen, setPreviewOpen] = React.useState(false);
 
   const vaultPath = useVaultStore((s) => s.vaultPath);
   const openVault = useVaultStore((s) => s.openVault);
   const toggleVimMode = useEditorSettingsStore((state) => state.toggleVimMode);
+  const toggleLivePreview = usePreviewStore((state) => state.toggleLivePreview);
+  const togglePreviewPane = usePreviewStore((state) => state.togglePreviewPane);
 
   useKeybindings({
     "editor.vim.toggle": toggleVimMode,
+    "reading.toggle": toggleLivePreview,
     "vault.toggle": () => setVaultOpen((open) => !open),
-    "preview.toggle": () => setPreviewOpen((open) => !open),
+    "preview.toggle": togglePreviewPane,
     "vault.open": () => void openVault(),
   });
 
   return (
     <SidebarProvider open={vaultOpen} onOpenChange={setVaultOpen}>
       <VaultSidebar />
-      <SidebarProvider open={previewOpen} onOpenChange={setPreviewOpen}>
-        <SidebarInset className={vaultPath ? "min-h-0" : "items-center justify-center gap-4"}>
-          {vaultPath ? <Editor /> : <NoVaultCallToAction />}
-        </SidebarInset>
-        <PreviewSidebar />
-      </SidebarProvider>
+      <SidebarInset className={vaultPath ? "min-h-0" : "items-center justify-center gap-4"}>
+        {vaultPath ? <EditorWorkspace /> : <NoVaultCallToAction />}
+      </SidebarInset>
     </SidebarProvider>
   );
 }

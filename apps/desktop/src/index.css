@@ -152,6 +152,106 @@
     background-color: color-mix(in oklch, var(--background) 70%, transparent) !important;
   }
 
+  .rune-preview {
+    color: var(--foreground);
+  }
+
+  .rune-preview > * + * {
+    margin-top: 1rem;
+  }
+
+  .rune-preview h1,
+  .rune-preview h2,
+  .rune-preview h3,
+  .rune-preview h4,
+  .rune-preview h5,
+  .rune-preview h6 {
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .rune-preview h1 {
+    font-size: 1.75rem;
+  }
+
+  .rune-preview h2 {
+    font-size: 1.5rem;
+  }
+
+  .rune-preview h3 {
+    font-size: 1.25rem;
+  }
+
+  .rune-preview p,
+  .rune-preview li,
+  .rune-preview blockquote,
+  .rune-preview td,
+  .rune-preview th {
+    line-height: 1.7;
+  }
+
+  .rune-preview ul,
+  .rune-preview ol {
+    padding-left: 1.5rem;
+  }
+
+  .rune-preview ul {
+    list-style: disc;
+  }
+
+  .rune-preview ol {
+    list-style: decimal;
+  }
+
+  .rune-preview blockquote {
+    border-left: 2px solid var(--border);
+    color: var(--muted-foreground);
+    padding-left: 1rem;
+  }
+
+  .rune-preview a {
+    color: var(--primary);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .rune-preview code {
+    background-color: color-mix(in oklch, var(--muted) 70%, transparent);
+    border-radius: calc(var(--radius) - 4px);
+    font-size: 0.875em;
+    padding: 0.15rem 0.35rem;
+  }
+
+  .rune-preview pre {
+    background-color: color-mix(in oklch, var(--card) 75%, transparent);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    padding: 1rem;
+  }
+
+  .rune-preview pre code {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  .rune-preview hr {
+    border-color: var(--border);
+  }
+
+  .rune-preview table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .rune-preview th,
+  .rune-preview td {
+    border: 1px solid var(--border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+  }
+
   .rune-editor,
   .rune-editor .cm-editor,
   .rune-editor .cm-scroller,
