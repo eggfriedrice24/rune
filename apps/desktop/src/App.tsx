@@ -6,6 +6,7 @@ import * as React from "react";
 import { EditorShell } from "@/components/editor-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CommandPalette } from "@/features/command/components/command-palette";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useEditorSettingsStore } from "@/features/editor/store/editor-settings";
 import { LibrarySidebar } from "@/features/library/components/library-sidebar";
@@ -17,6 +18,7 @@ import { RuneLogo } from "./components/rune-logo";
 
 export function App() {
   const [libraryOpen, setLibraryOpen] = React.useState(false);
+  const [commandOpen, setCommandOpen] = React.useState(false);
 
   const libraryPath = useLibraryStore((s) => s.libraryPath);
   const openLibrary = useLibraryStore((s) => s.openLibrary);
@@ -25,6 +27,7 @@ export function App() {
   const togglePreviewPane = usePreviewStore((state) => state.togglePreviewPane);
 
   useKeybindings({
+    "command.open": () => setCommandOpen((open) => !open),
     "editor.vim.toggle": toggleVimMode,
     "reading.toggle": toggleLivePreview,
     "library.toggle": () => setLibraryOpen((open) => !open),
@@ -38,6 +41,13 @@ export function App() {
       <SidebarInset className={libraryPath ? "min-h-0" : "items-center justify-center gap-4"}>
         {libraryPath ? <EditorShell /> : <NoLibraryCallToAction />}
       </SidebarInset>
+      <CommandPalette
+        open={commandOpen}
+        onOpenChange={setCommandOpen}
+        onToggleLibrarySidebar={() => setLibraryOpen((open) => !open)}
+        onTogglePreviewPane={togglePreviewPane}
+        onToggleReadingMode={toggleLivePreview}
+      />
     </SidebarProvider>
   );
 }

@@ -5,6 +5,7 @@ import { tauriStoreStorage } from "@/lib/tauri-store-adapter";
 
 export type KeybindingId =
   | "library.toggle"
+  | "command.open"
   | "preview.toggle"
   | "reading.toggle"
   | "library.open"
@@ -22,6 +23,11 @@ export const KEYBINDING_DEFINITIONS: Record<KeybindingId, KeybindingDefinition> 
     id: "library.toggle",
     label: "Toggle library sidebar",
     defaultHotkey: "Mod+B",
+  },
+  "command.open": {
+    id: "command.open",
+    label: "Open command palette",
+    defaultHotkey: "Mod+K",
   },
   "preview.toggle": {
     id: "preview.toggle",
@@ -47,6 +53,7 @@ export const KEYBINDING_DEFINITIONS: Record<KeybindingId, KeybindingDefinition> 
 
 const DEFAULT_BINDINGS: Record<KeybindingId, string> = {
   "library.toggle": "Mod+B",
+  "command.open": "Mod+K",
   "preview.toggle": "Mod+P",
   "reading.toggle": "Mod+R",
   "library.open": "Mod+O",
@@ -86,7 +93,7 @@ export const useKeybindingsStore = create<KeybindingsState>()(
     {
       name: "rune.keybindings",
       storage: createJSONStorage(() => tauriStoreStorage),
-      version: 3,
+      version: 4,
       migrate: (persistedState) => {
         if (
           !persistedState ||
