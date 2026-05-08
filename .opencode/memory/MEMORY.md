@@ -1,0 +1,10 @@
+- [Rune project overview](project_rune_overview.md) - what rune is, stack, MCP plans, terminology, never-Next.js rule, library-first files model
+- [Never hand-write package versions](feedback_no_hand_written_versions.md) - always use `bun add` / `--catalog`, never type versions
+- [Never expose email in published metadata](feedback_no_email_in_published_metadata.md) - use GitHub username only in package.json, LICENSE, etc.
+- [Always invoke /commit skill when committing](feedback_always_use_commit_skill.md) - never run `git commit` directly; the skill handles granular splits + single-line messages
+- [Always use /shadcn skill for shadcn work](feedback_always_use_shadcn_skill.md) - never call `shadcn` CLI directly; always go through the skill
+- [Write semantic HTML; don't double-wrap shadcn components](feedback_semantic_html_no_double_wrap.md) - check what element a shadcn primitive renders (e.g. SidebarInset = `<main>`) before adding another landmark
+- [Catalog-first when adding new deps](feedback_catalog_first_for_new_deps.md) - default flow: bun add, then promote resolved version to root catalog, change workspace ref to `"catalog:"`
+- [User domain ikako.dev](user_domain.md) - use `dev.ikako.<app>` for reverse-DNS identifiers (Tauri, mobile bundle ids, etc.)
+- [Rune persistence layers](project_persistence_layers.md) - library files vs library SQLite index vs Tauri Store; what belongs where
+- [Rune next-session plan (resume here)](project_next_session_plan.md) - current slice order and library-first next steps
