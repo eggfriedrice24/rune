@@ -72,4 +72,6 @@ playground
 .direnv
 .worktrees
 .serena
+.opencode
+opencode.json
 __screenshots__
