@@ -7,6 +7,7 @@
     "desktop",
     "editor",
     "knowledge-base",
+    "library",
     "local-first",
     "markdown",
     "mcp",
@@ -14,8 +15,7 @@
     "note-taking",
     "notes",
     "react",
-    "tauri",
-    "vault"
+    "tauri"
   ],
   "homepage": "https://github.com/eggfriedrice24/rune#readme",
   "bugs": {

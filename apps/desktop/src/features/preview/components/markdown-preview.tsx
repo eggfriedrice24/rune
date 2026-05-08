@@ -57,7 +57,7 @@ export function MarkdownPreview({ statusLabel = "Preview" }: MarkdownPreviewProp
         <div className="max-w-sm text-center">
           <div className="text-2xl font-medium">No note selected</div>
           <div className="mt-2 text-sm text-muted-foreground">
-            Pick a Markdown file from the vault sidebar to preview it.
+            Pick a note from the library sidebar to preview it.
           </div>
         </div>
       </div>

@@ -5,13 +5,13 @@ import {
   isMarkdownFile,
   joinPath,
   shouldSkipEntry,
-  type VaultNode,
+  type LibraryNode,
 } from "@rune/core";
 
-async function readDirRecursive(path: string): Promise<VaultNode[]> {
+async function readDirRecursive(path: string): Promise<LibraryNode[]> {
   const entries = await readDir(path);
   const results = await Promise.all(
-    entries.map(async (entry): Promise<VaultNode[]> => {
+    entries.map(async (entry): Promise<LibraryNode[]> => {
       if (shouldSkipEntry(entry.name)) {
         return [];
       }
@@ -45,6 +45,6 @@ async function readDirRecursive(path: string): Promise<VaultNode[]> {
   return results.flat().toSorted(compareNodes);
 }
 
-export async function readVaultTree(path: string): Promise<VaultNode[]> {
+export async function readLibraryTree(path: string): Promise<LibraryNode[]> {
   return readDirRecursive(path);
 }

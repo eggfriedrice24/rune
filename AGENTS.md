@@ -5,11 +5,11 @@
 **rune** is an AI-native, local-first markdown **note-taking app** (not a generic editor). Notes live as plain `.md`
 files on disk; no accounts, no cloud, no telemetry. The app itself needs zero internet to function.
 
-rune has **two equally first-class creation surfaces**, both writing to the same vault on disk:
+rune has **two equally first-class creation surfaces**, both writing to the same library on disk:
 
 1. **The desktop app's editor** (`apps/desktop`, CodeMirror 6). The user writes and edits notes directly.
 2. **The MCP server** (`apps/mcp`, published as `@rune/mcp`). The user's AI agent (Claude Code, Codex, OpenCode, etc.)
-   creates vaults, drafts notes, edits content, and runs searches via MCP tool calls. This is rune's edge over Obsidian /
+   creates libraries, drafts notes, edits content, and runs searches via MCP tool calls. This is rune's edge over Obsidian /
    Logseq / iA Writer: AI is not bolted on, it is a peer of the human editor.
 
 MCP is a local IPC protocol; the server makes no network calls itself. Whether the connected agent reaches a cloud LLM
@@ -37,7 +37,7 @@ This repository is an early WIP. Proposing sweeping changes that improve long-te
   components, no SSR.
 - **Never use em dashes (-, U+2014) or en dashes (-, U+2013) in any output** (commit messages, PR descriptions, code
   comments, file content, docs). Use a regular hyphen-minus (`-`).
-- **Flat `.md` files on disk are the source of truth.** SQLite is a derived index; it must be rebuildable from the vault
+- **Flat `.md` files on disk are the source of truth.** SQLite is a derived index; it must be rebuildable from the library
   folder. Notes stay portable.
 - **Don't put I/O in `packages/core`.** Pure logic only, so the MCP server (Node `fs`) and the desktop app
   (`@tauri-apps/api/fs`) can share it.
@@ -55,10 +55,10 @@ Run from the repo root unless a package-local script is required.
 
 ## Package Roles
 
-- `apps/desktop`: Tauri 2 desktop app. Owns the editor UI, vault picker, keybinding system, and Tauri commands. Frontend
+- `apps/desktop`: Tauri 2 desktop app. Owns the editor UI, library picker, keybinding system, and Tauri commands. Frontend
   in React + Vite + CodeMirror; backend in Rust.
-- `apps/mcp`: Standalone MCP server. Reads/writes the vault folder directly, exposes tools to AI agents
-  (`bunx @rune/mcp --vault ~/notes`).
+- `apps/mcp`: Standalone MCP server. Reads/writes the library folder directly, exposes tools to AI agents
+  (`bunx @rune/mcp --library ~/notes/rune/personal`).
 - `packages/core`: I/O-agnostic markdown logic. Frontmatter, link resolution, headings, slugs, link graph. No `fs`, no
   Tauri APIs, no Bun-only APIs.
 - `packages/db`: Drizzle schema, migrations, and query helpers for the SQLite index. Consumed by both apps via different
@@ -68,24 +68,25 @@ Run from the repo root unless a package-local script is required.
 
 ## Storage Model
 
-- A **vault** is a folder **deliberately curated for notes**, by the user or by their agent. It is not "any folder you
-  point rune at." Real vaults look like `~/notes/` with `inbox/`, `daily/`, `projects/` subfolders, all created by user
-  or agent. They do not contain `target/`, `node_modules/`, or other build artifacts because nothing puts those there.
-- We do not engineer filtering for arbitrary code repos. The vault tree filters to `.md` files, hides folders that
+- A **library** is a top-level folder **deliberately curated for notes**, by the user or by their agent. It is not "any
+  folder you point rune at." New libraries are created under the platform default root: `~/notes/rune` on Linux/macOS
+  and `%USERPROFILE%\Documents\notes\rune` on Windows.
+- A **notebook** is a folder inside a library. A **note** is a plain `.md` file.
+- We do not engineer filtering for arbitrary code repos. The library tree filters to `.md` files, hides folders that
   recursively contain no `.md`, and skips a tiny universal cruft set (`.git`, `.rune`, `.DS_Store`, dotfiles). That is
   it. No `.gitignore` parsing, no growing skip list.
-- A SQLite database lives at `<vault>/.rune/index.db` and holds derived data: file metadata, headings, links, tags,
+- A SQLite database lives at `<library>/.rune/index.db` and holds derived data: file metadata, headings, links, tags,
   full-text search index.
 - Editing a note writes the file first, then updates the index. If the index is missing or stale, it is rebuilt from
   disk.
-- The MCP server operates on the same vault concurrently; both processes use file watchers and treat the disk as
+- The MCP server operates on the same library concurrently; both processes use file watchers and treat the disk as
   canonical.
 
 ## UI Model
 
 Three independent toggles, all bound to a user-configurable leader key:
 
-- **Sidebar** (vault file tree, left). Default `leader+b`. Hidden by default.
+- **Sidebar** (library tree, left). Default `leader+b`. Hidden by default.
 - **Preview pane** (rendered markdown, right). Default `leader+p`. Hidden by default.
 - **Reading mode** (preview replaces the editor full-window). Separate toggle.
 
@@ -126,7 +127,7 @@ Use snake_case for field names so column names don't need to be redefined as str
 ```ts
 const note = sqliteTable("note", {
   id: text().primaryKey(),
-  vault_path: text().notNull(),
+  library_path: text().notNull(),
   title: text().notNull(),
   updated_at: integer().notNull(),
 });
@@ -142,7 +143,7 @@ invariant). Never explain _what_ the code does; well-named identifiers do that.
 - Avoid mocks. Test the actual implementation.
 - Tests live next to the code they cover (`foo.ts` + `foo.test.ts`) or in a package-local `test/` directory.
 - Run tests from the package directory, not the repo root.
-- For the MCP server, integration tests should hit a real temp vault on disk.
+- For the MCP server, integration tests should hit a real temp library on disk.
 
 ## Tooling Notes
 

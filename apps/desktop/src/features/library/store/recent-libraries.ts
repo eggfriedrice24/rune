@@ -3,16 +3,16 @@ import { createJSONStorage, persist } from "zustand/middleware";
 
 import { tauriStoreStorage } from "@/lib/tauri-store-adapter";
 
-const MAX_RECENT_VAULTS = 8;
+const MAX_RECENT_LIBRARIES = 8;
 
-type RecentVaultsState = {
+type RecentLibrariesState = {
   recents: string[];
   pushRecent: (path: string) => void;
   removeRecent: (path: string) => void;
   clearRecents: () => void;
 };
 
-export const useRecentVaultsStore = create<RecentVaultsState>()(
+export const useRecentLibrariesStore = create<RecentLibrariesState>()(
   persist(
     (set) => ({
       recents: [],
@@ -20,7 +20,7 @@ export const useRecentVaultsStore = create<RecentVaultsState>()(
         set((state) => ({
           recents: [path, ...state.recents.filter((recentPath) => recentPath !== path)].slice(
             0,
-            MAX_RECENT_VAULTS,
+            MAX_RECENT_LIBRARIES,
           ),
         })),
       removeRecent: (path) =>
@@ -28,7 +28,7 @@ export const useRecentVaultsStore = create<RecentVaultsState>()(
       clearRecents: () => set({ recents: [] }),
     }),
     {
-      name: "rune.recent-vaults",
+      name: "rune.recent-libraries",
       storage: createJSONStorage(() => tauriStoreStorage),
     },
   ),

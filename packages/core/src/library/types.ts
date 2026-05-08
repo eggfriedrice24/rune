@@ -8,9 +8,9 @@ export type DirectoryNode = {
   name: string;
   path: string;
   type: "directory";
-  children: VaultNode[];
+  children: LibraryNode[];
 };
 
-export type VaultNode = FileNode | DirectoryNode;
+export type LibraryNode = FileNode | DirectoryNode;
 
-export type VaultStatus = "idle" | "loading" | "ready" | "error";
+export type LibraryStatus = "idle" | "loading" | "ready" | "error";

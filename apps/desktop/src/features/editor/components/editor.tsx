@@ -80,7 +80,7 @@ export function Editor() {
         <div className="max-w-sm text-center">
           <div className="text-2xl font-medium">No note selected</div>
           <div className="mt-2 text-sm text-muted-foreground">
-            Pick a Markdown file from the vault sidebar to start editing.
+            Pick a note from the library sidebar to start editing.
           </div>
         </div>
       </div>

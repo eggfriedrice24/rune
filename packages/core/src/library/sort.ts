@@ -1,7 +1,7 @@
 import { nodeName } from "./path.ts";
-import type { VaultNode } from "./types.ts";
+import type { LibraryNode } from "./types.ts";
 
-export function compareNodes(a: VaultNode, b: VaultNode): number {
+export function compareNodes(a: LibraryNode, b: LibraryNode): number {
   if (a.type !== b.type) {
     return a.type === "directory" ? -1 : 1;
   }

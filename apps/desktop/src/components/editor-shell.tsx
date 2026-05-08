@@ -1,11 +1,9 @@
-import * as React from "react";
-
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Editor } from "@/features/editor/components/editor";
 import { MarkdownPreview } from "@/features/preview/components/markdown-preview";
 import { usePreviewStore } from "@/features/preview/store/preview";
 
-export function EditorWorkspace() {
+export function EditorShell() {
   const isPreviewPaneOpen = usePreviewStore((state) => state.isPreviewPaneOpen);
   const isLivePreview = usePreviewStore((state) => state.isLivePreview);
 

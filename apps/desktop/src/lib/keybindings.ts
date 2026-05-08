@@ -4,10 +4,10 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { tauriStoreStorage } from "@/lib/tauri-store-adapter";
 
 export type KeybindingId =
-  | "vault.toggle"
+  | "library.toggle"
   | "preview.toggle"
   | "reading.toggle"
-  | "vault.open"
+  | "library.open"
   | "editor.vim.toggle";
 
 export type KeybindingDefinition = {
@@ -18,9 +18,9 @@ export type KeybindingDefinition = {
 };
 
 export const KEYBINDING_DEFINITIONS: Record<KeybindingId, KeybindingDefinition> = {
-  "vault.toggle": {
-    id: "vault.toggle",
-    label: "Toggle vault sidebar",
+  "library.toggle": {
+    id: "library.toggle",
+    label: "Toggle library sidebar",
     defaultHotkey: "Mod+B",
   },
   "preview.toggle": {
@@ -33,9 +33,9 @@ export const KEYBINDING_DEFINITIONS: Record<KeybindingId, KeybindingDefinition> 
     label: "Toggle reading mode",
     defaultHotkey: "Mod+R",
   },
-  "vault.open": {
-    id: "vault.open",
-    label: "Open vault",
+  "library.open": {
+    id: "library.open",
+    label: "Open existing library",
     defaultHotkey: "Mod+O",
   },
   "editor.vim.toggle": {
@@ -46,10 +46,10 @@ export const KEYBINDING_DEFINITIONS: Record<KeybindingId, KeybindingDefinition> 
 };
 
 const DEFAULT_BINDINGS: Record<KeybindingId, string> = {
-  "vault.toggle": "Mod+B",
+  "library.toggle": "Mod+B",
   "preview.toggle": "Mod+P",
   "reading.toggle": "Mod+R",
-  "vault.open": "Mod+O",
+  "library.open": "Mod+O",
   "editor.vim.toggle": "Mod+Shift+V",
 };
 
@@ -86,7 +86,7 @@ export const useKeybindingsStore = create<KeybindingsState>()(
     {
       name: "rune.keybindings",
       storage: createJSONStorage(() => tauriStoreStorage),
-      version: 2,
+      version: 3,
       migrate: (persistedState) => {
         if (
           !persistedState ||

@@ -1,6 +1,6 @@
 import { ArrowRight01Icon, FileIcon, FolderIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { nodeName, type VaultNode, type VaultStatus } from "@rune/core";
+import { nodeName, type LibraryNode, type LibraryStatus } from "@rune/core";
 import * as React from "react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -18,28 +18,28 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { useEditorStore } from "@/features/editor/store/editor";
-import { VaultSwitcher } from "@/features/vault/components/vault-switcher";
-import { useVaultStore } from "@/features/vault/store/vault";
+import { LibrarySwitcher } from "@/features/library/components/library-switcher";
+import { useLibraryStore } from "@/features/library/store/library";
 
-export function VaultSidebar(props: React.ComponentProps<typeof Sidebar>) {
-  const vaultPath = useVaultStore((s) => s.vaultPath);
-  const tree = useVaultStore((s) => s.tree);
-  const status = useVaultStore((s) => s.status);
-  const error = useVaultStore((s) => s.error);
+export function LibrarySidebar(props: React.ComponentProps<typeof Sidebar>) {
+  const libraryPath = useLibraryStore((s) => s.libraryPath);
+  const tree = useLibraryStore((s) => s.tree);
+  const status = useLibraryStore((s) => s.status);
+  const error = useLibraryStore((s) => s.error);
   const currentFilePath = useEditorStore((state) => state.currentFilePath);
   const openFile = useEditorStore((state) => state.openFile);
 
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <VaultSwitcher />
+        <LibrarySwitcher />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <VaultBody
+            <LibraryBody
               status={status}
-              vaultPath={vaultPath}
+              libraryPath={libraryPath}
               tree={tree}
               error={error}
               currentFilePath={currentFilePath}
@@ -53,16 +53,23 @@ export function VaultSidebar(props: React.ComponentProps<typeof Sidebar>) {
   );
 }
 
-type VaultBodyProps = {
-  status: VaultStatus;
-  vaultPath: string | null;
-  tree: VaultNode[];
+type LibraryBodyProps = {
+  status: LibraryStatus;
+  libraryPath: string | null;
+  tree: LibraryNode[];
   error: string | null;
   currentFilePath: string | null;
   openFile: (path: string) => Promise<void>;
 };
 
-function VaultBody({ status, vaultPath, tree, error, currentFilePath, openFile }: VaultBodyProps) {
+function LibraryBody({
+  status,
+  libraryPath,
+  tree,
+  error,
+  currentFilePath,
+  openFile,
+}: LibraryBodyProps) {
   if (status === "loading") {
     return (
       <SidebarMenu>
@@ -84,22 +91,24 @@ function VaultBody({ status, vaultPath, tree, error, currentFilePath, openFile }
 
   if (status === "error") {
     return (
-      <div className="px-2 py-1 text-xs text-destructive">{error ?? "Failed to load vault."}</div>
+      <div className="px-2 py-1 text-xs text-destructive">{error ?? "Failed to load library."}</div>
     );
   }
 
-  if (!vaultPath) {
+  if (!libraryPath) {
     return (
       <div className="px-2 py-1 text-xs text-muted-foreground">
-        No vault open. Press <kbd className="rounded bg-muted px-1.5 py-0.5">Mod</kbd>{" "}
-        <kbd className="rounded bg-muted px-1.5 py-0.5">o</kbd> to open one.
+        No library open. Press <kbd className="rounded bg-muted px-1.5 py-0.5">Mod</kbd>{" "}
+        <kbd className="rounded bg-muted px-1.5 py-0.5">o</kbd> to open an existing one.
       </div>
     );
   }
 
   if (tree.length === 0) {
     return (
-      <div className="px-2 py-1 text-xs text-muted-foreground">Vault is empty (no .md files).</div>
+      <div className="px-2 py-1 text-xs text-muted-foreground">
+        Library is empty (no .md notes).
+      </div>
     );
   }
 
@@ -113,7 +122,7 @@ function VaultBody({ status, vaultPath, tree, error, currentFilePath, openFile }
 }
 
 type TreeProps = {
-  node: VaultNode;
+  node: LibraryNode;
   currentFilePath: string | null;
   openFile: (path: string) => Promise<void>;
 };

@@ -2,7 +2,8 @@
 
 A local-first markdown note-taking desktop app.
 
-Notes are plain `.md` files on disk. No accounts, no cloud, no telemetry. An optional, locally-spawned MCP server lets AI agents (Claude Code, Codex, OpenCode, etc.) edit notes in the same vault.
+Notes are plain `.md` files on disk. No accounts, no cloud, no telemetry. An optional, locally-spawned MCP server lets
+AI agents (Claude Code, Codex, OpenCode, etc.) edit notes in the same library.
 
 ## Stack
 
