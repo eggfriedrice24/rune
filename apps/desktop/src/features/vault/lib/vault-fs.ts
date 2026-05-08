@@ -1,18 +1,18 @@
 import { readDir } from "@tauri-apps/plugin-fs";
 
-import type { VaultNode } from "@/features/vault/store/vault";
-
-const SKIP_NAMES = new Set([".rune", ".git", "node_modules", ".DS_Store"]);
-
-function joinPath(base: string, name: string): string {
-  return base.endsWith("/") ? `${base}${name}` : `${base}/${name}`;
-}
+import {
+  compareNodes,
+  isMarkdownFile,
+  joinPath,
+  shouldSkipEntry,
+  type VaultNode,
+} from "@rune/core";
 
 async function readDirRecursive(path: string): Promise<VaultNode[]> {
   const entries = await readDir(path);
   const results = await Promise.all(
     entries.map(async (entry): Promise<VaultNode[]> => {
-      if (entry.name.startsWith(".") || SKIP_NAMES.has(entry.name)) {
+      if (shouldSkipEntry(entry.name)) {
         return [];
       }
       const childPath = joinPath(path, entry.name);
@@ -30,7 +30,7 @@ async function readDirRecursive(path: string): Promise<VaultNode[]> {
           },
         ];
       }
-      if (entry.isFile && entry.name.endsWith(".md")) {
+      if (entry.isFile && isMarkdownFile(entry.name)) {
         return [
           {
             name: entry.name,
@@ -42,12 +42,7 @@ async function readDirRecursive(path: string): Promise<VaultNode[]> {
       return [];
     }),
   );
-  return results.flat().toSorted((a, b) => {
-    if (a.type !== b.type) {
-      return a.type === "directory" ? -1 : 1;
-    }
-    return a.name.localeCompare(b.name);
-  });
+  return results.flat().toSorted(compareNodes);
 }
 
 export async function readVaultTree(path: string): Promise<VaultNode[]> {

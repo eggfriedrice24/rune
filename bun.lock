@@ -18,6 +18,7 @@
         "@fontsource-variable/inter": "^5.2.8",
         "@hugeicons/core-free-icons": "^4.1.1",
         "@hugeicons/react": "^1.1.6",
+        "@rune/core": "workspace:*",
         "@tailwindcss/vite": "^4.2.1",
         "@tanstack/hotkeys": "catalog:",
         "@tanstack/react-hotkeys": "catalog:",
@@ -45,6 +46,10 @@
         "typescript": "catalog:",
         "vite": "^7.3.1",
       },
+    },
+    "packages/core": {
+      "name": "@rune/core",
+      "version": "0.0.1",
     },
   },
   "catalog": {
@@ -498,6 +503,8 @@
     "@rollup/rollup-win32-x64-gnu": ["@rollup/rollup-win32-x64-gnu@4.60.3", "", { "os": "win32", "cpu": "x64" }, "sha512-E5Eb5H/DpxaoXH++Qkv28RcUJboMopmdDUALBczvHMf7hNIxaDZqwY5lK12UK1BHacSmvupoEWGu+n993Z0y1A=="],
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.60.3", "", { "os": "win32", "cpu": "x64" }, "sha512-hPt/bgL5cE+Qp+/TPHBqptcAgPzgj46mPcg/16zNUmbQk0j+mOEQV/+Lqu8QRtDV3Ek95Q6FeFITpuhl6OTsAA=="],
+
+    "@rune/core": ["@rune/core@workspace:packages/core"],
 
     "@rune/desktop": ["@rune/desktop@workspace:apps/desktop"],
 

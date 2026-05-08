@@ -1,5 +1,6 @@
 import { ArrowRight01Icon, FolderOpenIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { basename } from "@rune/core";
 
 import {
   DropdownMenu,
@@ -13,12 +14,6 @@ import {
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { useRecentVaultsStore } from "@/features/vault/store/recent-vaults";
 import { useVaultStore } from "@/features/vault/store/vault";
-
-function basename(path: string): string {
-  const cleaned = path.replace(/\/+$/, "");
-  const idx = cleaned.lastIndexOf("/");
-  return idx === -1 ? cleaned : cleaned.slice(idx + 1);
-}
 
 export function VaultSwitcher() {
   const vaultPath = useVaultStore((state) => state.vaultPath);

@@ -1,5 +1,6 @@
 import { ArrowRight01Icon, FileIcon, FolderIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { nodeName, type VaultNode, type VaultStatus } from "@rune/core";
 import * as React from "react";
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -17,7 +18,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { VaultSwitcher } from "@/features/vault/components/vault-switcher";
-import { useVaultStore, type VaultNode, type VaultStatus } from "@/features/vault/store/vault";
+import { useVaultStore } from "@/features/vault/store/vault";
 
 export function VaultSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const vaultPath = useVaultStore((s) => s.vaultPath);
@@ -104,7 +105,7 @@ function Tree({ node }: { node: VaultNode }) {
     return (
       <SidebarMenuButton className="data-[active=true]:bg-transparent">
         <HugeiconsIcon icon={FileIcon} strokeWidth={2} className="text-chart-2" />
-        {node.name}
+        {nodeName(node)}
       </SidebarMenuButton>
     );
   }
@@ -127,7 +128,7 @@ function Tree({ node }: { node: VaultNode }) {
               strokeWidth={2}
               className="fill-primary text-primary"
             />
-            {node.name}
+            {nodeName(node)}
           </SidebarMenuButton>
         </CollapsibleTrigger>
         <CollapsibleContent>

@@ -3,6 +3,7 @@ import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+import { joinPath, type VaultNode, type VaultStatus } from "@rune/core";
 import { readVaultTree } from "@/features/vault/lib/vault-fs";
 import { useRecentVaultsStore } from "@/features/vault/store/recent-vaults";
 import { tauriStoreStorage } from "@/lib/tauri-store-adapter";
@@ -14,27 +15,6 @@ This is your first note.
 - Write Markdown files anywhere in this vault.
 - rune will show them in the sidebar automatically.
 `;
-
-function joinPath(base: string, name: string): string {
-  return base.endsWith("/") ? `${base}${name}` : `${base}/${name}`;
-}
-
-export type FileNode = {
-  name: string;
-  path: string;
-  type: "file";
-};
-
-export type DirectoryNode = {
-  name: string;
-  path: string;
-  type: "directory";
-  children: VaultNode[];
-};
-
-export type VaultNode = FileNode | DirectoryNode;
-
-export type VaultStatus = "idle" | "loading" | "ready" | "error";
 
 type VaultState = {
   vaultPath: string | null;
