@@ -124,7 +124,9 @@
   html,
   body,
   #root {
+    height: 100%;
     background-color: transparent;
+    overflow: hidden;
   }
   body {
     @apply text-foreground;
@@ -141,6 +143,9 @@
 
   /* Vibrancy: panels become translucent so the body's blurred desktop shows through. */
   [data-slot="sidebar-inner"] {
+    background-color: color-mix(in oklch, var(--sidebar) 70%, transparent) !important;
+  }
+  [data-slot="sidebar-gap"] {
     background-color: color-mix(in oklch, var(--sidebar) 70%, transparent) !important;
   }
   [data-slot="sidebar-inset"] {
