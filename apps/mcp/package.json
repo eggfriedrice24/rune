@@ -1,0 +1,49 @@
+{
+  "name": "@rune/mcp",
+  "version": "0.0.1",
+  "description": "Local MCP server for rune markdown note libraries.",
+  "keywords": [
+    "local-first",
+    "markdown",
+    "mcp",
+    "model-context-protocol",
+    "note-taking",
+    "notes",
+    "rune"
+  ],
+  "homepage": "https://github.com/eggfriedrice24/rune#readme",
+  "bugs": {
+    "url": "https://github.com/eggfriedrice24/rune/issues"
+  },
+  "license": "MIT",
+  "author": "eggfriedrice24 (https://github.com/eggfriedrice24)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eggfriedrice24/rune.git",
+    "directory": "apps/mcp"
+  },
+  "bin": {
+    "rune-mcp": "./src/index.ts"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --target=bun --outfile=dist/index.js",
+    "dev": "bun run ./src/index.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cfworker/json-schema": "catalog:",
+    "@modelcontextprotocol/server": "catalog:",
+    "@rune/core": "workspace:*",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}
