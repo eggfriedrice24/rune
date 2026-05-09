@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "rune",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "identifier": "dev.ikako.rune",
   "build": {
     "frontendDist": "../dist",
@@ -27,8 +27,26 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "publisher": "eggfriedrice24",
+    "homepage": "https://github.com/eggfriedrice24/rune",
+    "copyright": "Copyright (c) 2026 eggfriedrice24",
+    "license": "MIT",
+    "licenseFile": "../../../LICENSE",
+    "category": "Productivity",
+    "shortDescription": "Local-first markdown notes.",
+    "longDescription": "rune is a local-first markdown note-taking app. Notes stay as plain .md files on disk, with an optional MCP server for AI agents.",
+    "fileAssociations": [
+      {
+        "ext": ["md", "markdown"],
+        "name": "Markdown note",
+        "description": "Markdown note",
+        "role": "Editor",
+        "mimeType": "text/markdown"
+      }
+    ],
     "icon": [
       "icons/32x32.png",
+      "icons/64x64.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",

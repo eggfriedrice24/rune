@@ -1,10 +1,10 @@
 [package]
-name = "app"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+name = "rune"
+version = "0.1.1"
+description = "A local-first markdown note-taking desktop app with optional MCP support."
+authors = ["eggfriedrice24"]
+license = "MIT"
+repository = "https://github.com/eggfriedrice24/rune"
 edition = "2021"
 rust-version = "1.77.2"
 
