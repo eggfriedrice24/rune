@@ -2,6 +2,18 @@
   "name": "@rune/core",
   "version": "0.0.1",
   "private": true,
+  "description": "Shared pure logic for rune markdown libraries.",
+  "homepage": "https://github.com/eggfriedrice24/rune#readme",
+  "bugs": {
+    "url": "https://github.com/eggfriedrice24/rune/issues"
+  },
+  "license": "MIT",
+  "author": "eggfriedrice24 (https://github.com/eggfriedrice24)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eggfriedrice24/rune.git",
+    "directory": "packages/core"
+  },
   "type": "module",
   "types": "./src/index.ts",
   "exports": {

@@ -3,12 +3,15 @@
   "version": "0.0.1",
   "description": "Local MCP server for rune markdown note libraries.",
   "keywords": [
+    "agent",
+    "ai-native",
     "local-first",
     "markdown",
     "mcp",
     "model-context-protocol",
     "note-taking",
     "notes",
+    "plain-text",
     "rune"
   ],
   "homepage": "https://github.com/eggfriedrice24/rune#readme",
@@ -25,9 +28,16 @@
   "bin": {
     "rune-mcp": "./src/index.ts"
   },
+  "files": [
+    "README.md",
+    "src"
+  ],
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "bun build ./src/index.ts --target=bun --outfile=dist/index.js",

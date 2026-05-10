@@ -2,6 +2,18 @@
   "name": "@rune/desktop",
   "version": "0.1.1",
   "private": true,
+  "description": "Tauri desktop app for rune local-first markdown notes.",
+  "homepage": "https://github.com/eggfriedrice24/rune#readme",
+  "bugs": {
+    "url": "https://github.com/eggfriedrice24/rune/issues"
+  },
+  "license": "MIT",
+  "author": "eggfriedrice24 (https://github.com/eggfriedrice24)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eggfriedrice24/rune.git",
+    "directory": "apps/desktop"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",

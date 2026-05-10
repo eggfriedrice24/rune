@@ -1,8 +1,9 @@
 {
   "name": "rune",
   "private": true,
-  "description": "A local-first markdown note-taking desktop app with an optional MCP server for AI agents.",
+  "description": "AI-native, local-first markdown notes with desktop and MCP creation surfaces.",
   "keywords": [
+    "ai-native",
     "codemirror",
     "desktop",
     "editor",
@@ -14,6 +15,8 @@
     "model-context-protocol",
     "note-taking",
     "notes",
+    "offline",
+    "plain-text",
     "react",
     "tauri"
   ],
