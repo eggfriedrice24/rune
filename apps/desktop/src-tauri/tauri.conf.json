@@ -34,7 +34,7 @@
     "licenseFile": "../../../LICENSE",
     "category": "Productivity",
     "shortDescription": "Local-first markdown notes.",
-    "longDescription": "rune is a local-first markdown note-taking app. Notes stay as plain .md files on disk, with an optional MCP server for AI agents.",
+    "longDescription": "rune is an AI-native, local-first markdown note-taking app. Notes stay as plain .md files on disk, with a local MCP server for AI agents.",
     "fileAssociations": [
       {
         "ext": ["md", "markdown"],

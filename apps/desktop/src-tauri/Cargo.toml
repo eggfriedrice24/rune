@@ -1,9 +1,10 @@
 [package]
 name = "rune"
 version = "0.1.1"
-description = "A local-first markdown note-taking desktop app with optional MCP support."
+description = "AI-native, local-first markdown note-taking desktop app."
 authors = ["eggfriedrice24"]
 license = "MIT"
+homepage = "https://github.com/eggfriedrice24/rune"
 repository = "https://github.com/eggfriedrice24/rune"
 edition = "2021"
 rust-version = "1.77.2"
