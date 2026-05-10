@@ -1,21 +1,30 @@
-# React + TypeScript + Vite + shadcn/ui
+# @rune/desktop
 
-This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
+The Tauri desktop app for rune.
 
-## Adding components
+This workspace owns the editor UI, library picker, keybinding system, Markdown preview, and Tauri app shell. Notes are written directly to plain `.md` files on disk.
 
-To add components to your app, run the following command:
+## Development
+
+Run from the repo root:
 
 ```bash
-npx shadcn@latest add button
+bun install
+bun tauri:dev
 ```
 
-This will place the ui components in the `src/components` directory.
+Workspace-local commands are also available:
 
-## Using components
-
-To use the components in your app, import them as follows:
-
-```tsx
-import { Button } from "@/components/ui/button";
+```bash
+bun --cwd apps/desktop run dev
+bun --cwd apps/desktop run build
+bun --cwd apps/desktop run tauri:build
 ```
+
+## Structure
+
+- `src/features/library` contains library, notebook, and note filesystem UI.
+- `src/features/editor` contains CodeMirror editor state and components.
+- `src/features/preview` contains Markdown rendering.
+- `src/components/ui` contains shared shadcn/ui primitives.
+- `src-tauri` contains the Tauri 2 Rust shell and bundle metadata.
