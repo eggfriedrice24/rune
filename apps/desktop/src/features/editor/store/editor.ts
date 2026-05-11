@@ -3,10 +3,17 @@ import { create } from "zustand";
 
 type EditorStatus = "idle" | "loading" | "ready" | "saving" | "error";
 
+const LOCAL_EDIT_REFRESH_GRACE_MS = 10000;
+
+function wasRecentlyEdited(lastLocalEditAt: number | null) {
+  return lastLocalEditAt !== null && Date.now() - lastLocalEditAt < LOCAL_EDIT_REFRESH_GRACE_MS;
+}
+
 type EditorState = {
   currentFilePath: string | null;
   content: string;
   isDirty: boolean;
+  lastLocalEditAt: number | null;
   status: EditorStatus;
   error: string | null;
   openFile: (path: string) => Promise<void>;
@@ -20,6 +27,7 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
   currentFilePath: null,
   content: "",
   isDirty: false,
+  lastLocalEditAt: null,
   status: "idle",
   error: null,
   openFile: async (path) => {
@@ -35,11 +43,18 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
       }
     }
 
-    set({ currentFilePath: path, status: "loading", error: null });
+    set({ currentFilePath: path, status: "loading", error: null, lastLocalEditAt: null });
 
     try {
       const content = await readTextFile(path);
-      set({ currentFilePath: path, content, isDirty: false, status: "ready", error: null });
+      set({
+        currentFilePath: path,
+        content,
+        isDirty: false,
+        lastLocalEditAt: null,
+        status: "ready",
+        error: null,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
       set({ status: "error", error: message });
@@ -70,7 +85,12 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
         return;
       }
 
-      set({ content, isDirty: false, status: "ready", error: null });
+      if (wasRecentlyEdited(latestState.lastLocalEditAt)) {
+        set({ isDirty: true, status: "ready", error: null });
+        return;
+      }
+
+      set({ content, isDirty: false, lastLocalEditAt: null, status: "ready", error: null });
     } catch (err) {
       const latestState = get();
       if (latestState.currentFilePath !== currentFilePath || latestState.isDirty) {
@@ -81,7 +101,13 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
       set({ status: "error", error: message });
     }
   },
-  updateContent: (content) => set({ content, isDirty: true, status: "ready", error: null }),
+  updateContent: (content) => {
+    if (content === get().content) {
+      return;
+    }
+
+    set({ content, isDirty: true, lastLocalEditAt: Date.now(), status: "ready", error: null });
+  },
   saveCurrentFile: async () => {
     const currentFilePath = get().currentFilePath;
     if (!currentFilePath) {
@@ -112,5 +138,12 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
     }
   },
   reset: () =>
-    set({ currentFilePath: null, content: "", isDirty: false, status: "idle", error: null }),
+    set({
+      currentFilePath: null,
+      content: "",
+      isDirty: false,
+      lastLocalEditAt: null,
+      status: "idle",
+      error: null,
+    }),
 }));
