@@ -10,6 +10,7 @@ type EditorState = {
   status: EditorStatus;
   error: string | null;
   openFile: (path: string) => Promise<void>;
+  refreshCurrentFileFromDisk: () => Promise<void>;
   updateContent: (content: string) => void;
   saveCurrentFile: () => Promise<boolean>;
   reset: () => void;
@@ -40,6 +41,42 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
       const content = await readTextFile(path);
       set({ currentFilePath: path, content, isDirty: false, status: "ready", error: null });
     } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      set({ status: "error", error: message });
+    }
+  },
+  refreshCurrentFileFromDisk: async () => {
+    const state = get();
+    const currentFilePath = state.currentFilePath;
+    if (
+      !currentFilePath ||
+      state.isDirty ||
+      state.status === "loading" ||
+      state.status === "saving"
+    ) {
+      return;
+    }
+
+    try {
+      const content = await readTextFile(currentFilePath);
+      const latestState = get();
+      if (
+        latestState.currentFilePath !== currentFilePath ||
+        latestState.isDirty ||
+        latestState.status === "loading" ||
+        latestState.status === "saving" ||
+        latestState.content === content
+      ) {
+        return;
+      }
+
+      set({ content, isDirty: false, status: "ready", error: null });
+    } catch (err) {
+      const latestState = get();
+      if (latestState.currentFilePath !== currentFilePath || latestState.isDirty) {
+        return;
+      }
+
       const message = err instanceof Error ? err.message : String(err);
       set({ status: "error", error: message });
     }

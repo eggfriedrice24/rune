@@ -66,6 +66,10 @@ function childrenForPath(tree: LibraryNode[], path: string, libraryPath: string)
   return findDirectory(tree, path)?.children ?? tree;
 }
 
+function libraryTreesEqual(left: LibraryNode[], right: LibraryNode[]) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 type LibraryState = {
   libraryPath: string | null;
   selectedNotebookPath: string | null;
@@ -234,6 +238,10 @@ export const useLibraryStore = create<LibraryState>()(
         }
         try {
           const tree = await readLibraryTree(path);
+          if (get().libraryPath !== path || libraryTreesEqual(get().tree, tree)) {
+            return;
+          }
+
           set({ tree });
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);

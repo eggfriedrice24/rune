@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { CommandPalette } from "@/features/command/components/command-palette";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useEditorSettingsStore } from "@/features/editor/store/editor-settings";
+import { useEditorStore } from "@/features/editor/store/editor";
 import { LibrarySidebar } from "@/features/library/components/library-sidebar";
+import { startLibraryWatcher } from "@/features/library/lib/library-fs";
 import { getDefaultLibraryRoot } from "@/features/library/lib/library-paths";
 import { useLibraryStore } from "@/features/library/store/library";
 import { usePreviewStore } from "@/features/preview/store/preview";
@@ -22,6 +24,8 @@ export function App() {
 
   const libraryPath = useLibraryStore((s) => s.libraryPath);
   const openLibrary = useLibraryStore((s) => s.openLibrary);
+  const reloadLibrary = useLibraryStore((s) => s.reload);
+  const refreshCurrentFileFromDisk = useEditorStore((s) => s.refreshCurrentFileFromDisk);
   const toggleVimMode = useEditorSettingsStore((state) => state.toggleVimMode);
   const toggleLivePreview = usePreviewStore((state) => state.toggleLivePreview);
   const togglePreviewPane = usePreviewStore((state) => state.togglePreviewPane);
@@ -34,6 +38,42 @@ export function App() {
     "preview.toggle": togglePreviewPane,
     "library.open": () => void openLibrary(),
   });
+
+  React.useEffect(() => {
+    if (!libraryPath) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    let stopWatching: (() => void) | null = null;
+
+    void startLibraryWatcher(libraryPath, () => {
+      if (cancelled) {
+        return;
+      }
+
+      void reloadLibrary();
+      void refreshCurrentFileFromDisk();
+    })
+      .then((unwatch) => {
+        if (cancelled) {
+          unwatch();
+          return;
+        }
+
+        stopWatching = unwatch;
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          console.error("Failed to watch library", err);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+      stopWatching?.();
+    };
+  }, [libraryPath, refreshCurrentFileFromDisk, reloadLibrary]);
 
   return (
     <SidebarProvider open={libraryOpen} onOpenChange={setLibraryOpen}>

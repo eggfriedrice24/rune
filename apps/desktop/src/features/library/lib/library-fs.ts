@@ -1,4 +1,4 @@
-import { readDir } from "@tauri-apps/plugin-fs";
+import { readDir, watch, type UnwatchFn, type WatchEvent } from "@tauri-apps/plugin-fs";
 
 import {
   compareNodes,
@@ -7,6 +7,8 @@ import {
   shouldSkipEntry,
   type LibraryNode,
 } from "@rune/core";
+
+const WATCH_DEBOUNCE_MS = 2000;
 
 async function readDirRecursive(path: string): Promise<LibraryNode[]> {
   const entries = await readDir(path);
@@ -47,4 +49,11 @@ async function readDirRecursive(path: string): Promise<LibraryNode[]> {
 
 export async function readLibraryTree(path: string): Promise<LibraryNode[]> {
   return readDirRecursive(path);
+}
+
+export async function startLibraryWatcher(
+  path: string,
+  onChange: (event: WatchEvent) => void,
+): Promise<UnwatchFn> {
+  return watch(path, onChange, { delayMs: WATCH_DEBOUNCE_MS, recursive: true });
 }
