@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/command";
 import { useEditorStore } from "@/features/editor/store/editor";
 import { useLibraryStore } from "@/features/library/store/library";
+import { searchLibraryNotes, type NoteSearchResult } from "@/features/search/lib/search-notes";
 
 type CommandPaletteProps = {
   open: boolean;
@@ -97,6 +98,9 @@ export function CommandPalette({
   onToggleReadingMode,
 }: CommandPaletteProps) {
   const [search, setSearch] = React.useState("");
+  const [searchError, setSearchError] = React.useState<string | null>(null);
+  const [searchResults, setSearchResults] = React.useState<NoteSearchResult[]>([]);
+  const deferredSearch = React.useDeferredValue(search);
   const libraryPath = useLibraryStore((state) => state.libraryPath);
   const selectedNotebookPath = useLibraryStore((state) => state.selectedNotebookPath);
   const tree = useLibraryStore((state) => state.tree);
@@ -106,6 +110,7 @@ export function CommandPalette({
   const openLibrary = useLibraryStore((state) => state.openLibrary);
   const selectNotebook = useLibraryStore((state) => state.selectNotebook);
   const openFile = useEditorStore((state) => state.openFile);
+  const openFileAtLocation = useEditorStore((state) => state.openFileAtLocation);
 
   const entries = React.useMemo(
     () => (libraryPath ? flattenLibraryTree(tree, libraryPath) : []),
@@ -135,10 +140,44 @@ export function CommandPalette({
       "toggle library sidebar",
       "toggle preview pane",
       "toggle reading mode",
+      ...searchResults.map((result) => result.relativePath),
       ...entries.map((entry) => entry.value),
     ],
-    [entries],
+    [entries, searchResults],
   );
+
+  React.useEffect(() => {
+    if (!open || !libraryPath || !deferredSearch.trim()) {
+      setSearchError(null);
+      setSearchResults([]);
+      return undefined;
+    }
+
+    let cancelled = false;
+    setSearchError(null);
+    const timeout = window.setTimeout(() => {
+      void searchLibraryNotes({ libraryPath, query: deferredSearch })
+        .then((results) => {
+          if (!cancelled) {
+            setSearchResults(results);
+          }
+        })
+        .catch((error: unknown) => {
+          if (cancelled) {
+            return;
+          }
+
+          console.error("Command palette search failed", error);
+          setSearchResults([]);
+          setSearchError(error instanceof Error ? error.message : String(error));
+        });
+    }, 150);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [deferredSearch, libraryPath, open]);
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange} title="Command Palette">
@@ -233,6 +272,51 @@ export function CommandPalette({
             <CommandShortcut>Mod+R</CommandShortcut>
           </CommandItem>
         </CommandGroup>
+        {searchError ? (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Search error">
+              <CommandItem value={`search error ${searchError}`} disabled>
+                <HugeiconsIcon icon={FileIcon} strokeWidth={2} className="text-destructive" />
+                <div className="min-w-0 flex-1 truncate text-destructive">{searchError}</div>
+              </CommandItem>
+            </CommandGroup>
+          </>
+        ) : null}
+        {searchResults.length > 0 ? (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Search">
+              {searchResults.map((result) => (
+                <CommandItem
+                  key={result.path}
+                  value={`search ${result.relativePath} ${result.title} ${result.snippet} ${deferredSearch}`}
+                  keywords={[
+                    result.name,
+                    result.relativePath,
+                    result.title,
+                    result.snippet,
+                    deferredSearch,
+                  ]}
+                  onSelect={() =>
+                    run(() =>
+                      openFileAtLocation(result.path, { column: result.column, line: result.line }),
+                    )
+                  }
+                >
+                  <HugeiconsIcon icon={FileIcon} strokeWidth={2} className="text-chart-2" />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate">{result.title}</div>
+                    <div className="truncate text-[0.6875rem] text-muted-foreground">
+                      {result.relativePath} - {result.snippet}
+                    </div>
+                  </div>
+                  <CommandShortcut>match</CommandShortcut>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        ) : null}
         {entries.length > 0 ? (
           <>
             <CommandSeparator />

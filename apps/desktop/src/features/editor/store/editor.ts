@@ -3,20 +3,35 @@ import { create } from "zustand";
 
 type EditorStatus = "idle" | "loading" | "ready" | "saving" | "error";
 
+export type EditorLocation = {
+  column: number;
+  line: number;
+};
+
+export type EditorCursorTarget = EditorLocation & {
+  requestId: number;
+};
+
 const LOCAL_EDIT_REFRESH_GRACE_MS = 10000;
 
 function wasRecentlyEdited(lastLocalEditAt: number | null) {
   return lastLocalEditAt !== null && Date.now() - lastLocalEditAt < LOCAL_EDIT_REFRESH_GRACE_MS;
 }
 
+function cursorTargetFromLocation(location: EditorLocation): EditorCursorTarget {
+  return { ...location, requestId: Date.now() + Math.random() };
+}
+
 type EditorState = {
   currentFilePath: string | null;
   content: string;
+  cursorTarget: EditorCursorTarget | null;
   isDirty: boolean;
   lastLocalEditAt: number | null;
   status: EditorStatus;
   error: string | null;
   openFile: (path: string) => Promise<void>;
+  openFileAtLocation: (path: string, location: EditorLocation) => Promise<void>;
   refreshCurrentFileFromDisk: () => Promise<void>;
   updateContent: (content: string) => void;
   saveCurrentFile: () => Promise<boolean>;
@@ -26,13 +41,16 @@ type EditorState = {
 export const useEditorStore = create<EditorState>()((set, get) => ({
   currentFilePath: null,
   content: "",
+  cursorTarget: null,
   isDirty: false,
   lastLocalEditAt: null,
   status: "idle",
   error: null,
-  openFile: async (path) => {
+  openFile: (path) => get().openFileAtLocation(path, { column: 0, line: 1 }),
+  openFileAtLocation: async (path, location) => {
     const currentState = get();
     if (path === currentState.currentFilePath && currentState.status !== "error") {
+      set({ cursorTarget: cursorTargetFromLocation(location) });
       return;
     }
 
@@ -43,13 +61,20 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
       }
     }
 
-    set({ currentFilePath: path, status: "loading", error: null, lastLocalEditAt: null });
+    set({
+      currentFilePath: path,
+      cursorTarget: null,
+      status: "loading",
+      error: null,
+      lastLocalEditAt: null,
+    });
 
     try {
       const content = await readTextFile(path);
       set({
         currentFilePath: path,
         content,
+        cursorTarget: cursorTargetFromLocation(location),
         isDirty: false,
         lastLocalEditAt: null,
         status: "ready",
@@ -141,6 +166,7 @@ export const useEditorStore = create<EditorState>()((set, get) => ({
     set({
       currentFilePath: null,
       content: "",
+      cursorTarget: null,
       isDirty: false,
       lastLocalEditAt: null,
       status: "idle",

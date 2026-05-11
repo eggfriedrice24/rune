@@ -46,6 +46,7 @@ export function Editor() {
   const { theme } = useTheme();
   const currentFilePath = useEditorStore((state) => state.currentFilePath);
   const content = useEditorStore((state) => state.content);
+  const cursorTarget = useEditorStore((state) => state.cursorTarget);
   const isDirty = useEditorStore((state) => state.isDirty);
   const status = useEditorStore((state) => state.status);
   const error = useEditorStore((state) => state.error);
@@ -74,6 +75,23 @@ export function Editor() {
 
     editorRef.current?.view?.focus();
   }, [currentFilePath]);
+
+  React.useEffect(() => {
+    const view = editorRef.current?.view;
+    if (!view || !cursorTarget) {
+      return;
+    }
+
+    const line = view.state.doc.line(
+      Math.min(Math.max(cursorTarget.line, 1), view.state.doc.lines),
+    );
+    const position = line.from + Math.min(Math.max(cursorTarget.column, 0), line.length);
+    view.dispatch({
+      effects: EditorView.scrollIntoView(position, { y: "center" }),
+      selection: { anchor: position },
+    });
+    view.focus();
+  }, [cursorTarget]);
 
   if (!currentFilePath) {
     return (

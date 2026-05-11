@@ -8,7 +8,7 @@ No accounts. No cloud sync. No telemetry. The app does not need internet access 
 
 ## Status
 
-rune is early preview software. The desktop app can create libraries, create notebooks and notes, edit Markdown with CodeMirror, auto-save to disk, and render a live preview. The MCP server is included and is being developed as the second creation surface.
+rune is early preview software. The desktop app can create libraries, create notebooks and notes, edit Markdown with CodeMirror, auto-save to disk, render a live preview, and search notes from the command palette. The MCP server is included and is being developed as the second creation surface.
 
 ## Concepts
 
@@ -23,8 +23,8 @@ rune is early preview software. The desktop app can create libraries, create not
 - Library-first setup that creates notes under `~/notes/rune` on Linux and macOS, and under the Documents folder on Windows.
 - CodeMirror 6 editor with Markdown support and debounced auto-save.
 - Live Markdown preview pane and reading mode.
-- Keyboard-driven UI with configurable leader-key shortcuts.
-- Local MCP server for agent-created notes and notebooks.
+- Keyboard-driven UI with configurable shortcuts.
+- Local MCP server for agent-created notes, notebooks, and search.
 
 ## Install
 
@@ -63,7 +63,7 @@ bun --cwd apps/mcp run dev -- --library ~/notes/rune/personal
 - `apps/desktop` is the Tauri 2 desktop app built with Vite, React, TypeScript, CodeMirror 6, shadcn/ui, and Tailwind v4.
 - `apps/mcp` is the Bun-powered local MCP server for note and notebook tools.
 - `packages/core` contains shared, I/O-free Markdown and library logic.
-- A future `packages/db` package will own the derived SQLite index layer.
+- `packages/db` contains the rebuildable SQLite index schema and search helpers.
 
 ## Privacy
 
