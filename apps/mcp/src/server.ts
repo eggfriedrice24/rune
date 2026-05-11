@@ -13,6 +13,7 @@ import {
   resolveLibraryPath,
   writeNote,
 } from "./library.ts";
+import { searchLibraryNotes } from "./search.ts";
 
 const VERSION = "0.0.1";
 
@@ -131,6 +132,27 @@ export function createRuneMcpServer(initialLibraryPath: string | null) {
           libraryPath: activeLibraryPath(state),
           notebook: input.notebook,
           filename: input.filename,
+        }),
+      }),
+  );
+
+  server.registerTool(
+    "note.search",
+    {
+      description:
+        "Rebuild the derived SQLite index from disk and search markdown notes in the active rune library.",
+      inputSchema: z.object({
+        query: z.string().min(1),
+        limit: z.number().int().min(1).max(50).optional(),
+      }),
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    async (input) =>
+      toolResponse({
+        result: await searchLibraryNotes({
+          libraryPath: activeLibraryPath(state),
+          query: input.query,
+          limit: input.limit,
         }),
       }),
   );

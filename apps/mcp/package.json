@@ -49,6 +49,7 @@
     "@cfworker/json-schema": "catalog:",
     "@modelcontextprotocol/server": "catalog:",
     "@rune/core": "workspace:*",
+    "@rune/db": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -13,6 +13,7 @@ import {
   readNote,
   writeNote,
 } from "../src/library.ts";
+import { searchLibraryNotes } from "../src/search.ts";
 
 const tempRoots: string[] = [];
 
@@ -79,6 +80,64 @@ test("lists markdown notes while skipping cruft", async () => {
   expect((await listNotes(libraryPath)).map((entry) => entry.path)).toEqual([
     "project/todo.md",
     "welcome.md",
+  ]);
+});
+
+test("searches markdown notes through a rebuilt SQLite index", async () => {
+  const libraryPath = await createTempLibrary();
+  const notebook = await createNotebook({ libraryPath, name: "Ideas" });
+  await writeNote({
+    libraryPath,
+    filename: "sqlite.md",
+    content: "# SQLite Index\n\nSearch should find markdown notes through full-text search.\n",
+  });
+  await writeNote({
+    libraryPath,
+    notebook: notebook.path,
+    filename: "hooks.md",
+    content: "# Hook Ideas\n\nPlugin hooks can extend OpenCode.\n",
+  });
+
+  const search = await searchLibraryNotes({ libraryPath, query: "sqlite search", limit: 10 });
+
+  expect(search.indexedNoteCount).toBe(3);
+  expect(search.results.map((result) => result.path)).toEqual(["sqlite.md"]);
+  expect(search.results[0]).toMatchObject({
+    name: "sqlite.md",
+    notebook: "",
+    path: "sqlite.md",
+    title: "SQLite Index",
+  });
+  expect(search.results[0]?.snippet.toLowerCase()).toContain("sqlite");
+  expect(await Bun.file(nodePath.join(libraryPath, ".rune", "index.db")).exists()).toBe(true);
+
+  const titleSearch = await searchLibraryNotes({ libraryPath, query: "hook ideas" });
+
+  expect(titleSearch.results.map((result) => result.path)).toEqual(["ideas/hooks.md"]);
+
+  const filenameSearch = await searchLibraryNotes({ libraryPath, query: "hooks.md" });
+
+  expect(filenameSearch.results.map((result) => result.path)).toEqual(["ideas/hooks.md"]);
+});
+
+test("search rebuilds the index from changed markdown files", async () => {
+  const libraryPath = await createTempLibrary();
+  await writeNote({
+    libraryPath,
+    filename: "draft.md",
+    content: "# Draft\n\nNo special keyword yet.\n",
+  });
+
+  expect((await searchLibraryNotes({ libraryPath, query: "needleword" })).results).toEqual([]);
+
+  await writeNote({
+    libraryPath,
+    filename: "draft.md",
+    content: "# Draft\n\nThe needleword appears after the first search.\n",
+  });
+
+  expect((await searchLibraryNotes({ libraryPath, query: "needleword" })).results).toMatchObject([
+    { path: "draft.md", title: "Draft" },
   ]);
 });
 

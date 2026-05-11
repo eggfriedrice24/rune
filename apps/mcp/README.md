@@ -2,7 +2,7 @@
 
 Local MCP server for rune markdown libraries.
 
-The server exposes tools for AI agents to create libraries, create notebooks, list notes, read notes, write notes, and delete notes. It writes to the same plain `.md` files that the desktop app uses.
+The server exposes tools for AI agents to create libraries, create notebooks, list notes, read notes, write notes, search notes, and delete notes. It writes to the same plain `.md` files that the desktop app uses.
 
 ## Usage
 
@@ -29,8 +29,11 @@ If no library is provided, call `library.create` from the connected MCP client b
 - `notebook.delete`
 - `note.list`
 - `note.read`
+- `note.search`
 - `note.write`
 - `note.delete`
+
+`note.search` rebuilds the derived SQLite index at `<library>/.rune/index.db` from the current Markdown files before querying it. The index searches note paths, filenames, Markdown heading titles, and note body content.
 
 ## Privacy
 
