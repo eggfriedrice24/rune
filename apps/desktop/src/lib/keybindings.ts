@@ -4,8 +4,8 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { tauriStoreStorage } from "@/lib/tauri-store-adapter";
 
 export type KeybindingId =
-  | "library.toggle"
   | "command.open"
+  | "keybindings.toggle"
   | "preview.toggle"
   | "reading.toggle"
   | "library.open"
@@ -19,15 +19,15 @@ export type KeybindingDefinition = {
 };
 
 export const KEYBINDING_DEFINITIONS: Record<KeybindingId, KeybindingDefinition> = {
-  "library.toggle": {
-    id: "library.toggle",
-    label: "Toggle library sidebar",
-    defaultHotkey: "Mod+B",
-  },
   "command.open": {
     id: "command.open",
     label: "Open command palette",
     defaultHotkey: "Mod+K",
+  },
+  "keybindings.toggle": {
+    id: "keybindings.toggle",
+    label: "Show keybindings",
+    defaultHotkey: "Mod+/",
   },
   "preview.toggle": {
     id: "preview.toggle",
@@ -41,7 +41,7 @@ export const KEYBINDING_DEFINITIONS: Record<KeybindingId, KeybindingDefinition> 
   },
   "library.open": {
     id: "library.open",
-    label: "Open existing library",
+    label: "Open library manager",
     defaultHotkey: "Mod+O",
   },
   "editor.vim.toggle": {
@@ -52,8 +52,8 @@ export const KEYBINDING_DEFINITIONS: Record<KeybindingId, KeybindingDefinition> 
 };
 
 const DEFAULT_BINDINGS: Record<KeybindingId, string> = {
-  "library.toggle": "Mod+B",
   "command.open": "Mod+K",
+  "keybindings.toggle": "Mod+/",
   "preview.toggle": "Mod+P",
   "reading.toggle": "Mod+R",
   "library.open": "Mod+O",
@@ -77,8 +77,12 @@ function normalizeBindings(bindings: Partial<Record<KeybindingId, string>> | und
   }
 
   return {
-    ...DEFAULT_BINDINGS,
-    ...bindings,
+    "command.open": bindings["command.open"] ?? DEFAULT_BINDINGS["command.open"],
+    "editor.vim.toggle": bindings["editor.vim.toggle"] ?? DEFAULT_BINDINGS["editor.vim.toggle"],
+    "keybindings.toggle": bindings["keybindings.toggle"] ?? DEFAULT_BINDINGS["keybindings.toggle"],
+    "library.open": bindings["library.open"] ?? DEFAULT_BINDINGS["library.open"],
+    "preview.toggle": bindings["preview.toggle"] ?? DEFAULT_BINDINGS["preview.toggle"],
+    "reading.toggle": bindings["reading.toggle"] ?? DEFAULT_BINDINGS["reading.toggle"],
   };
 }
 
@@ -93,7 +97,7 @@ export const useKeybindingsStore = create<KeybindingsState>()(
     {
       name: "rune.keybindings",
       storage: createJSONStorage(() => tauriStoreStorage),
-      version: 4,
+      version: 5,
       migrate: (persistedState) => {
         if (
           !persistedState ||

@@ -8,17 +8,17 @@ export function EditorShell() {
   const isLivePreview = usePreviewStore((state) => state.isLivePreview);
 
   if (!isPreviewPaneOpen) {
-    return isLivePreview ? <MarkdownPreview statusLabel="Live" /> : <Editor />;
+    return isLivePreview ? <MarkdownPreview /> : <Editor />;
   }
 
   return (
-    <ResizablePanelGroup orientation="horizontal" className="h-full">
+    <ResizablePanelGroup orientation="horizontal" className="h-full w-full">
       <ResizablePanel defaultSize="60%" minSize="35%">
-        {isLivePreview ? <MarkdownPreview statusLabel="Live" /> : <Editor />}
+        {isLivePreview ? <MarkdownPreview /> : <Editor />}
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize="40%" minSize="20%">
-        <MarkdownPreview statusLabel="Pane" />
+        <MarkdownPreview />
       </ResizablePanel>
     </ResizablePanelGroup>
   );

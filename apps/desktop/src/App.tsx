@@ -1,31 +1,34 @@
-import { FolderOpenIcon } from "@hugeicons/core-free-icons";
+import { FolderAddIcon } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { joinPath, libraryFolderName } from "@rune/core";
 import * as React from "react";
 
+import { AppHeader } from "@/components/app-header";
 import { EditorShell } from "@/components/editor-shell";
+import { RuneLogo } from "@/components/rune-logo";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { CommandPalette } from "@/features/command/components/command-palette";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useEditorSettingsStore } from "@/features/editor/store/editor-settings";
 import { useEditorStore } from "@/features/editor/store/editor";
-import { LibrarySidebar } from "@/features/library/components/library-sidebar";
 import { startLibraryWatcher } from "@/features/library/lib/library-fs";
-import { getDefaultLibraryRoot } from "@/features/library/lib/library-paths";
+import {
+  LibraryDialogs,
+  type CreateDialogType,
+  type DeleteLibraryEntryTarget,
+} from "@/features/library/components/library-dialogs";
 import { useLibraryStore } from "@/features/library/store/library";
 import { usePreviewStore } from "@/features/preview/store/preview";
 import { useKeybindings } from "@/hooks/use-keybindings";
-import { RuneLogo } from "./components/rune-logo";
 
 export function App() {
-  const [libraryOpen, setLibraryOpen] = React.useState(false);
   const [commandOpen, setCommandOpen] = React.useState(false);
+  const [createDialog, setCreateDialog] = React.useState<CreateDialogType | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<DeleteLibraryEntryTarget | null>(null);
+  const [keybindingsOpen, setKeybindingsOpen] = React.useState(false);
+  const [libraryDialogOpen, setLibraryDialogOpen] = React.useState(false);
 
-  const libraryPath = useLibraryStore((s) => s.libraryPath);
-  const openLibrary = useLibraryStore((s) => s.openLibrary);
-  const reloadLibrary = useLibraryStore((s) => s.reload);
-  const refreshCurrentFileFromDisk = useEditorStore((s) => s.refreshCurrentFileFromDisk);
+  const libraryPath = useLibraryStore((state) => state.libraryPath);
+  const reloadLibrary = useLibraryStore((state) => state.reload);
+  const refreshCurrentFileFromDisk = useEditorStore((state) => state.refreshCurrentFileFromDisk);
   const toggleVimMode = useEditorSettingsStore((state) => state.toggleVimMode);
   const toggleLivePreview = usePreviewStore((state) => state.toggleLivePreview);
   const togglePreviewPane = usePreviewStore((state) => state.togglePreviewPane);
@@ -33,10 +36,10 @@ export function App() {
   useKeybindings({
     "command.open": () => setCommandOpen((open) => !open),
     "editor.vim.toggle": toggleVimMode,
-    "reading.toggle": toggleLivePreview,
-    "library.toggle": () => setLibraryOpen((open) => !open),
+    "keybindings.toggle": () => setKeybindingsOpen((open) => !open),
+    "library.open": () => setLibraryDialogOpen(true),
     "preview.toggle": togglePreviewPane,
-    "library.open": () => void openLibrary(),
+    "reading.toggle": toggleLivePreview,
   });
 
   React.useEffect(() => {
@@ -76,105 +79,66 @@ export function App() {
   }, [libraryPath, refreshCurrentFileFromDisk, reloadLibrary]);
 
   return (
-    <SidebarProvider open={libraryOpen} onOpenChange={setLibraryOpen}>
-      <LibrarySidebar />
-      <SidebarInset className={libraryPath ? "min-h-0" : "items-center justify-center gap-4"}>
-        {libraryPath ? <EditorShell /> : <NoLibraryCallToAction />}
-      </SidebarInset>
-      <CommandPalette
-        open={commandOpen}
-        onOpenChange={setCommandOpen}
-        onToggleLibrarySidebar={() => setLibraryOpen((open) => !open)}
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background/70">
+      <AppHeader
+        keybindingsOpen={keybindingsOpen}
+        onCommandOpen={() => setCommandOpen(true)}
+        onCreateDialogChange={setCreateDialog}
+        onKeybindingsOpenChange={setKeybindingsOpen}
+        onOpenLibrary={() => setLibraryDialogOpen(true)}
         onTogglePreviewPane={togglePreviewPane}
         onToggleReadingMode={toggleLivePreview}
       />
-    </SidebarProvider>
+      <main className="flex min-h-0 flex-1 overflow-hidden">
+        {libraryPath ? (
+          <EditorShell />
+        ) : (
+          <NoLibraryCallToAction onOpenLibraryDialog={() => setLibraryDialogOpen(true)} />
+        )}
+      </main>
+      <CommandPalette
+        open={commandOpen}
+        onOpenChange={setCommandOpen}
+        onCreateNote={() => setCreateDialog("note")}
+        onCreateNotebook={() => setCreateDialog("notebook")}
+        onDeleteEntry={setDeleteTarget}
+        onOpenLibraryDialog={() => setLibraryDialogOpen(true)}
+        onShowKeybindings={() => setKeybindingsOpen(true)}
+        onTogglePreviewPane={togglePreviewPane}
+        onToggleReadingMode={toggleLivePreview}
+      />
+      <LibraryDialogs
+        createDialog={createDialog}
+        deleteTarget={deleteTarget}
+        libraryDialogOpen={libraryDialogOpen}
+        onCreateDialogChange={setCreateDialog}
+        onDeleteTargetChange={setDeleteTarget}
+        onLibraryDialogOpenChange={setLibraryDialogOpen}
+      />
+    </div>
   );
 }
 
-function NoLibraryCallToAction() {
-  const [libraryName, setLibraryName] = React.useState("");
-  const [defaultRoot, setDefaultRoot] = React.useState<string | null>(null);
-  const createLibrary = useLibraryStore((s) => s.createLibrary);
-  const openLibrary = useLibraryStore((s) => s.openLibrary);
-  const status = useLibraryStore((s) => s.status);
-  const error = useLibraryStore((s) => s.error);
-  const folderName = libraryFolderName(libraryName);
-
-  React.useEffect(() => {
-    let cancelled = false;
-
-    void getDefaultLibraryRoot()
-      .then((root) => {
-        if (!cancelled) {
-          setDefaultRoot(root);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setDefaultRoot(null);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
+function NoLibraryCallToAction({ onOpenLibraryDialog }: { onOpenLibraryDialog: () => void }) {
   return (
-    <div className="flex w-full max-w-sm flex-col items-center gap-4 px-6">
-      <div className="flex gap-2 items-center self-start">
-        <RuneLogo size={60} />
-
-        <div>
-          <h1 className="text-lg">Create Library</h1>
-
-          <div className="text-xs text-muted-foreground">
-            rune keeps notes as local Markdown files.
-          </div>
+    <div className="flex flex-1 items-center justify-center px-6">
+      <div className="flex w-full max-w-md flex-col items-center gap-4 text-center">
+        <RuneLogo size={72} />
+        <div className="flex flex-col gap-1">
+          <h1 className="text-lg font-medium">Start with a library</h1>
+          <p className="text-sm text-muted-foreground">
+            Create a local notes library or open an existing folder of Markdown notes.
+          </p>
         </div>
-      </div>
-
-      <form
-        className="flex w-full max-w-xs flex-col items-center gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          void createLibrary(libraryName);
-        }}
-      >
-        <Input
-          id="library-name"
-          autoFocus
-          placeholder="Personal notes"
-          value={libraryName}
-          onChange={(event) => setLibraryName(event.target.value)}
-        />
-
-        <span className="min-h-4 text-xs text-muted-foreground">
-          {defaultRoot && folderName
-            ? joinPath(defaultRoot, folderName)
-            : "Stored in your notes folder"}
-        </span>
-
-        <Button
-          type="submit"
-          disabled={!folderName || status === "loading"}
-          className="mt-2 w-full"
-        >
-          Create Library
-        </Button>
-      </form>
-
-      {status === "error" && error ? <div className="text-xs text-destructive">{error}</div> : null}
-
-      <Button type="button" variant="ghost" onClick={() => void openLibrary()}>
-        <HugeiconsIcon icon={FolderOpenIcon} data-icon="inline-start" />
-        Open existing library
-      </Button>
-
-      <div className="text-xs text-muted-foreground">
-        Press <kbd className="rounded bg-muted px-1.5 py-0.5">Mod</kbd>{" "}
-        <kbd className="rounded bg-muted px-1.5 py-0.5">o</kbd> to open an existing library.
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button type="button" onClick={onOpenLibraryDialog}>
+            <HugeiconsIcon icon={FolderAddIcon} data-icon="inline-start" />
+            Create library
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Press <kbd className="rounded bg-muted px-1.5 py-0.5">Mod K</kbd> for commands.
+        </p>
       </div>
     </div>
   );

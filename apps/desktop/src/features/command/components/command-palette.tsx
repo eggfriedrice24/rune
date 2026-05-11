@@ -5,7 +5,6 @@ import {
   FolderAddIcon,
   FolderIcon,
   FolderOpenIcon,
-  SidebarLeftIcon,
   ViewIcon,
 } from "@hugeicons/core-free-icons";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -23,13 +22,19 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { useEditorStore } from "@/features/editor/store/editor";
+import type { DeleteLibraryEntryTarget } from "@/features/library/components/library-dialogs";
 import { useLibraryStore } from "@/features/library/store/library";
+import { useRecentLibrariesStore } from "@/features/library/store/recent-libraries";
 import { searchLibraryNotes, type NoteSearchResult } from "@/features/search/lib/search-notes";
 
 type CommandPaletteProps = {
   open: boolean;
+  onCreateNote: () => void;
+  onCreateNotebook: () => void;
+  onDeleteEntry: (target: DeleteLibraryEntryTarget) => void;
+  onOpenLibraryDialog: () => void;
   onOpenChange: (open: boolean) => void;
-  onToggleLibrarySidebar: () => void;
+  onShowKeybindings: () => void;
   onTogglePreviewPane: () => void;
   onToggleReadingMode: () => void;
 };
@@ -41,11 +46,6 @@ type LibraryCommandEntry = {
   type: "note" | "notebook";
   value: string;
 };
-
-function promptForName(label: string) {
-  const name = window.prompt(label);
-  return name?.trim() ? name : null;
-}
 
 function relativePath(libraryPath: string, path: string) {
   return path
@@ -92,8 +92,12 @@ function firstAutocompleteMatch(search: string, values: string[]) {
 
 export function CommandPalette({
   open,
+  onCreateNote,
+  onCreateNotebook,
+  onDeleteEntry,
+  onOpenLibraryDialog,
   onOpenChange,
-  onToggleLibrarySidebar,
+  onShowKeybindings,
   onTogglePreviewPane,
   onToggleReadingMode,
 }: CommandPaletteProps) {
@@ -104,11 +108,8 @@ export function CommandPalette({
   const libraryPath = useLibraryStore((state) => state.libraryPath);
   const selectedNotebookPath = useLibraryStore((state) => state.selectedNotebookPath);
   const tree = useLibraryStore((state) => state.tree);
-  const createLibrary = useLibraryStore((state) => state.createLibrary);
-  const createNote = useLibraryStore((state) => state.createNote);
-  const createNotebook = useLibraryStore((state) => state.createNotebook);
-  const openLibrary = useLibraryStore((state) => state.openLibrary);
   const selectNotebook = useLibraryStore((state) => state.selectNotebook);
+  const recents = useRecentLibrariesStore((state) => state.recents);
   const openFile = useEditorStore((state) => state.openFile);
   const openFileAtLocation = useEditorStore((state) => state.openFileAtLocation);
 
@@ -116,6 +117,8 @@ export function CommandPalette({
     () => (libraryPath ? flattenLibraryTree(tree, libraryPath) : []),
     [libraryPath, tree],
   );
+  const notes = entries.filter((entry) => entry.type === "note");
+  const notebooks = entries.filter((entry) => entry.type === "notebook");
   const targetLabel = selectedNotebookPath ? basename(selectedNotebookPath) : "library root";
 
   const close = React.useCallback(() => {
@@ -134,16 +137,19 @@ export function CommandPalette({
   const autocompleteValues = React.useMemo(
     () => [
       "create library",
+      "change library",
       "new note",
       "new notebook",
       "open existing library",
-      "toggle library sidebar",
+      "show keybindings",
       "toggle preview pane",
       "toggle reading mode",
+      ...recents.map((path) => `switch library ${basename(path)}`),
       ...searchResults.map((result) => result.relativePath),
       ...entries.map((entry) => entry.value),
+      ...entries.map((entry) => `delete ${entry.type} ${entry.value}`),
     ],
-    [entries, searchResults],
+    [entries, recents, searchResults],
   );
 
   React.useEffect(() => {
@@ -182,7 +188,7 @@ export function CommandPalette({
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange} title="Command Palette">
       <CommandInput
-        placeholder="Type a command or path. Tab completes."
+        placeholder="Type a command, library, notebook, note, or search. Tab completes."
         value={search}
         onValueChange={setSearch}
         onKeyDown={(event) => {
@@ -200,17 +206,12 @@ export function CommandPalette({
         }}
       />
       <CommandList>
-        <CommandEmpty>No command or note found.</CommandEmpty>
-        <CommandGroup heading="Actions">
+        <CommandEmpty>No command, library, or note found.</CommandEmpty>
+        <CommandGroup heading="Create">
           <CommandItem
             value="create library"
             keywords={["new library", "add library"]}
-            onSelect={() => {
-              const name = promptForName("Library name");
-              if (name) {
-                run(() => createLibrary(name));
-              }
-            }}
+            onSelect={() => run(onOpenLibraryDialog)}
           >
             <HugeiconsIcon icon={FolderAddIcon} strokeWidth={2} />
             Create library
@@ -219,12 +220,7 @@ export function CommandPalette({
             value="new note"
             keywords={["add note", "create note", targetLabel]}
             disabled={!libraryPath}
-            onSelect={() => {
-              const name = promptForName(`Note name in ${targetLabel}`);
-              if (name) {
-                run(() => createNote(name));
-              }
-            }}
+            onSelect={() => run(onCreateNote)}
           >
             <HugeiconsIcon icon={FilePlusIcon} strokeWidth={2} />
             New note
@@ -234,32 +230,50 @@ export function CommandPalette({
             value="new notebook"
             keywords={["add notebook", "create notebook", targetLabel]}
             disabled={!libraryPath}
-            onSelect={() => {
-              const name = promptForName(`Notebook name in ${targetLabel}`);
-              if (name) {
-                run(() => createNotebook(name));
-              }
-            }}
+            onSelect={() => run(onCreateNotebook)}
           >
             <HugeiconsIcon icon={FolderAddIcon} strokeWidth={2} />
             New notebook
             <CommandShortcut>{targetLabel}</CommandShortcut>
           </CommandItem>
+        </CommandGroup>
+        <CommandSeparator />
+        <CommandGroup heading="Library">
           <CommandItem
-            value="open existing library"
-            keywords={["import library", "open folder"]}
-            onSelect={() => run(() => openLibrary())}
+            value="change library"
+            keywords={["switch library", "open existing library", "open folder"]}
+            onSelect={() => run(onOpenLibraryDialog)}
           >
             <HugeiconsIcon icon={FolderOpenIcon} strokeWidth={2} />
-            Open existing library
+            Change library
+            <CommandShortcut>Mod+O</CommandShortcut>
           </CommandItem>
+          {recents.map((path) => (
+            <CommandItem
+              key={path}
+              value={`switch library ${basename(path)} ${path}`}
+              keywords={[basename(path), path, "recent library"]}
+              onSelect={() => run(onOpenLibraryDialog)}
+            >
+              <HugeiconsIcon icon={FolderOpenIcon} strokeWidth={2} className="text-chart-2" />
+              <div className="min-w-0 flex-1">
+                <div className="truncate">{basename(path)}</div>
+                <div className="truncate text-[0.6875rem] text-muted-foreground">{path}</div>
+              </div>
+              {path === libraryPath ? <CommandShortcut>current</CommandShortcut> : null}
+            </CommandItem>
+          ))}
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="View">
-          <CommandItem value="toggle library sidebar" onSelect={() => run(onToggleLibrarySidebar)}>
-            <HugeiconsIcon icon={SidebarLeftIcon} strokeWidth={2} />
-            Toggle library sidebar
-            <CommandShortcut>Mod+B</CommandShortcut>
+          <CommandItem
+            value="show keybindings"
+            keywords={["keyboard", "shortcuts", "hotkeys"]}
+            onSelect={() => run(onShowKeybindings)}
+          >
+            <HugeiconsIcon icon={BookOpen02Icon} strokeWidth={2} />
+            Show keybindings
+            <CommandShortcut>Mod+/</CommandShortcut>
           </CommandItem>
           <CommandItem value="toggle preview pane" onSelect={() => run(onTogglePreviewPane)}>
             <HugeiconsIcon icon={ViewIcon} strokeWidth={2} />
@@ -317,33 +331,68 @@ export function CommandPalette({
             </CommandGroup>
           </>
         ) : null}
+        {notebooks.length > 0 ? (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Notebooks">
+              {notebooks.map((entry) => (
+                <CommandItem
+                  key={entry.path}
+                  value={`notebook ${entry.value}`}
+                  keywords={[entry.label, entry.path, "select notebook"]}
+                  onSelect={() => run(() => selectNotebook(entry.path))}
+                >
+                  <span style={{ width: `${entry.depth * 14}px` }} />
+                  <HugeiconsIcon icon={FolderIcon} strokeWidth={2} className="text-primary" />
+                  <span className="truncate">{entry.label}</span>
+                  <CommandShortcut>select</CommandShortcut>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        ) : null}
+        {notes.length > 0 ? (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Notes">
+              {notes.map((entry) => (
+                <CommandItem
+                  key={entry.path}
+                  value={`note ${entry.value}`}
+                  keywords={[entry.label, entry.path, "open note"]}
+                  onSelect={() => run(() => openFile(entry.path))}
+                >
+                  <span style={{ width: `${entry.depth * 14}px` }} />
+                  <HugeiconsIcon icon={FileIcon} strokeWidth={2} className="text-chart-2" />
+                  <span className="truncate">{entry.label}</span>
+                  <CommandShortcut>open</CommandShortcut>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        ) : null}
         {entries.length > 0 ? (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Library">
+            <CommandGroup heading="Delete">
               {entries.map((entry) => (
                 <CommandItem
                   key={entry.path}
-                  value={entry.value}
-                  keywords={[entry.label, entry.path, entry.type]}
+                  value={`delete ${entry.type} ${entry.value}`}
+                  keywords={[entry.label, entry.path, entry.type, "remove"]}
                   onSelect={() =>
-                    run(() => {
-                      if (entry.type === "notebook") {
-                        selectNotebook(entry.path);
-                        return;
-                      }
-
-                      void openFile(entry.path);
-                    })
+                    run(() =>
+                      onDeleteEntry({ label: entry.label, path: entry.path, type: entry.type }),
+                    )
                   }
                 >
                   <span style={{ width: `${entry.depth * 14}px` }} />
                   <HugeiconsIcon
                     icon={entry.type === "notebook" ? FolderIcon : FileIcon}
                     strokeWidth={2}
-                    className={entry.type === "notebook" ? "text-primary" : "text-chart-2"}
+                    className="text-destructive"
                   />
-                  <span className="truncate">{entry.label}</span>
+                  <span className="truncate">Delete {entry.label}</span>
                   <CommandShortcut>{entry.type}</CommandShortcut>
                 </CommandItem>
               ))}

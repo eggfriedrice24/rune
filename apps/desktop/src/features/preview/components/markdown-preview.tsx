@@ -1,14 +1,9 @@
-import { basename } from "@rune/core";
 import * as React from "react";
 
 import { useEditorStore } from "@/features/editor/store/editor";
 import { renderMarkdown } from "@/features/preview/lib/render-markdown";
 
-type MarkdownPreviewProps = {
-  statusLabel?: string;
-};
-
-export function MarkdownPreview({ statusLabel = "Preview" }: MarkdownPreviewProps) {
+export function MarkdownPreview() {
   const currentFilePath = useEditorStore((state) => state.currentFilePath);
   const content = useEditorStore((state) => state.content);
   const deferredContent = React.useDeferredValue(content);
@@ -53,11 +48,11 @@ export function MarkdownPreview({ statusLabel = "Preview" }: MarkdownPreviewProp
 
   if (!currentFilePath) {
     return (
-      <div className="flex flex-1 items-center justify-center px-6">
+      <div className="flex h-full flex-1 items-center justify-center px-6">
         <div className="max-w-sm text-center">
           <div className="text-2xl font-medium">No note selected</div>
           <div className="mt-2 text-sm text-muted-foreground">
-            Pick a note from the library sidebar to preview it.
+            Open a note from the command palette to preview it.
           </div>
         </div>
       </div>
@@ -65,14 +60,7 @@ export function MarkdownPreview({ statusLabel = "Preview" }: MarkdownPreviewProp
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center justify-between border-b px-4 py-2">
-        <div className="min-w-0">
-          <div className="truncate text-sm font-medium">{basename(currentFilePath)}</div>
-          <div className="truncate text-xs text-muted-foreground">{currentFilePath}</div>
-        </div>
-        <div className="shrink-0 text-xs text-muted-foreground">{statusLabel}</div>
-      </div>
+    <div className="flex h-full min-h-0 w-full flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-auto px-6 py-5">
         {error ? (
           <div className="text-sm text-destructive">{error}</div>
