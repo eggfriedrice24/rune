@@ -1,0 +1,31 @@
+{
+  "name": "@rune/db",
+  "version": "0.0.1",
+  "private": true,
+  "description": "SQLite schema and query helpers for rune library indexes.",
+  "homepage": "https://github.com/eggfriedrice24/rune#readme",
+  "bugs": {
+    "url": "https://github.com/eggfriedrice24/rune/issues"
+  },
+  "license": "MIT",
+  "author": "eggfriedrice24 (https://github.com/eggfriedrice24)",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eggfriedrice24/rune.git",
+    "directory": "packages/db"
+  },
+  "type": "module",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "drizzle-orm": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  }
+}
