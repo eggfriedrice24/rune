@@ -1,6 +1,6 @@
 [package]
 name = "rune"
-version = "0.1.1"
+version = "0.1.2"
 description = "AI-native, local-first markdown note-taking desktop app."
 authors = ["eggfriedrice24"]
 license = "MIT"

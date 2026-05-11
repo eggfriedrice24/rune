@@ -1,6 +1,6 @@
 {
   "name": "@rune/desktop",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "Tauri desktop app for rune local-first markdown notes.",
   "homepage": "https://github.com/eggfriedrice24/rune#readme",

@@ -13,7 +13,7 @@
     },
     "apps/desktop": {
       "name": "@rune/desktop",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "dependencies": {
         "@codemirror/lang-markdown": "catalog:",
         "@codemirror/language-data": "catalog:",
