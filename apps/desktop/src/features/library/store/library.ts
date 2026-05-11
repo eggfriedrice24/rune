@@ -1,5 +1,5 @@
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
-import { mkdir, writeTextFile } from "@tauri-apps/plugin-fs";
+import { mkdir, remove, writeTextFile } from "@tauri-apps/plugin-fs";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
@@ -24,7 +24,7 @@ This is your first note.
 
 - Write Markdown files anywhere in this library.
 - Use notebooks to keep related notes together.
-- rune will show notes in the sidebar automatically.
+- rune will show notes in the command palette automatically.
 `;
 
 function noteContent(name: string) {
@@ -70,6 +70,19 @@ function libraryTreesEqual(left: LibraryNode[], right: LibraryNode[]) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+function isPathInside(parentPath: string, childPath: string | null) {
+  if (!childPath) {
+    return false;
+  }
+
+  const parent = parentPath.replace(/[\\/]+$/, "");
+  return (
+    childPath === parent ||
+    childPath.startsWith(`${parent}/`) ||
+    childPath.startsWith(`${parent}\\`)
+  );
+}
+
 type LibraryState = {
   libraryPath: string | null;
   selectedNotebookPath: string | null;
@@ -79,6 +92,8 @@ type LibraryState = {
   createLibrary: (name: string) => Promise<void>;
   createNote: (name: string, parentPath?: string | null) => Promise<void>;
   createNotebook: (name: string, parentPath?: string | null) => Promise<void>;
+  deleteNote: (path: string) => Promise<void>;
+  deleteNotebook: (path: string) => Promise<void>;
   openLibrary: (path?: string) => Promise<void>;
   closeLibrary: () => void;
   reload: () => Promise<void>;
@@ -168,6 +183,52 @@ export const useLibraryStore = create<LibraryState>()(
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err);
           set({ status: "error", error: `Failed to create notebook: ${message}` });
+        }
+      },
+      deleteNote: async (path) => {
+        const libraryPath = get().libraryPath;
+        if (!libraryPath) {
+          set({ status: "error", error: "Open a library before deleting a note." });
+          return;
+        }
+
+        set({ status: "loading", error: null });
+
+        try {
+          await remove(path);
+          if (useEditorStore.getState().currentFilePath === path) {
+            useEditorStore.getState().reset();
+          }
+          set({ tree: await readLibraryTree(libraryPath), status: "ready" });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ status: "error", error: `Failed to delete note: ${message}` });
+        }
+      },
+      deleteNotebook: async (path) => {
+        const libraryPath = get().libraryPath;
+        if (!libraryPath) {
+          set({ status: "error", error: "Open a library before deleting a notebook." });
+          return;
+        }
+
+        set({ status: "loading", error: null });
+
+        try {
+          await remove(path, { recursive: true });
+          if (isPathInside(path, useEditorStore.getState().currentFilePath)) {
+            useEditorStore.getState().reset();
+          }
+          set({
+            selectedNotebookPath: isPathInside(path, get().selectedNotebookPath)
+              ? null
+              : get().selectedNotebookPath,
+            tree: await readLibraryTree(libraryPath),
+            status: "ready",
+          });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          set({ status: "error", error: `Failed to delete notebook: ${message}` });
         }
       },
       createLibrary: async (name) => {
