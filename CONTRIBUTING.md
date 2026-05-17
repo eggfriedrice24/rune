@@ -36,6 +36,12 @@ bun test
 
 If you touch desktop release or Tauri behavior, also run a relevant desktop build or smoke test.
 
+For release preparation, follow `RELEASE.md` and run:
+
+```bash
+bun release:check
+```
+
 ## Code Style
 
 - Prefer small, direct changes over broad rewrites.

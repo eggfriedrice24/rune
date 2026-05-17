@@ -42,6 +42,7 @@
   "scripts": {
     "build": "bun build ./src/index.ts --target=bun --outfile=dist/index.js",
     "dev": "bun run ./src/index.ts",
+    "pack:check": "bun pm pack --dry-run",
     "prepack": "bun run build",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
