@@ -1,0 +1,29 @@
+name: Dispatch AUR Update
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch:
+    name: Dispatch AUR package update
+    if: ${{ !github.event.release.prerelease && startsWith(github.event.release.tag_name, 'v') }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.AUR_REPO_DISPATCH_TOKEN }}
+
+    steps:
+      - name: Skip without dispatch token
+        if: env.GH_TOKEN == ''
+        run: echo "AUR_REPO_DISPATCH_TOKEN is not set, skipping immediate AUR dispatch."
+
+      - name: Dispatch AUR repository
+        if: env.GH_TOKEN != ''
+        run: |
+          gh api repos/eggfriedrice24/rune-notes-bin/dispatches \
+            --method POST \
+            -f event_type=rune-release-published

@@ -1,6 +1,6 @@
 # Release Process
 
-This release flow is intentionally manual while rune is early. Keep publishing steps boring and explicit until the desktop, MCP, and AUR paths have settled.
+This release flow keeps publishing explicit while rune is early. GitHub builds desktop releases, the AUR package is automated from a separate packaging repo, and MCP publishing stays manual until it is ready.
 
 ## Preflight
 
@@ -38,7 +38,7 @@ Desktop release assets are built by `.github/workflows/release.yml` when a `v*` 
 Manual flow:
 
 ```bash
-git tag v0.1.3
+git tag v0.1.4
 git push origin main --tags
 ```
 
@@ -48,6 +48,7 @@ After the workflow finishes:
 - Confirm Linux `.deb`, `.rpm`, `.AppImage`, macOS, and Windows assets are present.
 - Update release notes from `CHANGELOG.md`.
 - Publish the GitHub release.
+- Confirm the `Dispatch AUR Update` workflow either dispatches `eggfriedrice24/rune-notes-bin` or skips because `AUR_REPO_DISPATCH_TOKEN` is not configured.
 
 ## MCP Package
 
@@ -76,42 +77,50 @@ Publish from `apps/mcp` only after the dry-run output looks correct.
 
 ## AUR Package
 
-The Arch package is currently manual in the local AUR checkout at `~/p/rune-notes-bin` and publishes to `ssh://aur@aur.archlinux.org/rune-notes-bin.git`.
+The Arch package is managed from `eggfriedrice24/rune-notes-bin`, with local checkout `~/p/rune-notes-bin`.
 
-Manual flow after publishing the GitHub desktop release:
+The packaging repo:
+
+- Tracks published `eggfriedrice24/rune` releases.
+- Builds `rune-notes-bin` from the Linux `.deb` release asset.
+- Pushes `PKGBUILD` and `.SRCINFO` to `ssh://aur@aur.archlinux.org/rune-notes-bin.git`.
+- Polls every 6 hours as a fallback.
+- Accepts `repository_dispatch` event `rune-release-published` for immediate updates.
+
+The main repo sends that dispatch from `.github/workflows/aur-dispatch.yml` when a non-prerelease GitHub release is published.
+
+Required main-repo secret for immediate AUR updates:
+
+```txt
+AUR_REPO_DISPATCH_TOKEN
+```
+
+Use a fine-grained GitHub token that can call `repository_dispatch` on `eggfriedrice24/rune-notes-bin`. If the secret is missing, the dispatch workflow skips and the 6-hour packaging poll remains the fallback.
+
+Required packaging-repo secret for pushing to AUR:
+
+```txt
+AUR_SSH_PRIVATE_KEY
+```
+
+Manual packaging repo check:
 
 ```bash
 cd ~/p/rune-notes-bin
-```
-
-Update `PKGBUILD`:
-
-- Set `pkgver` to the desktop version without the leading `v`.
-- Reset or increment `pkgrel` as appropriate.
-- Point `source` at the new GitHub release `.deb`.
-- Update `sha256sums` from the new asset.
-
-Regenerate and test package metadata:
-
-```bash
-makepkg --printsrcinfo > .SRCINFO
+bash scripts/check_upstream.sh
 makepkg -f
 ```
 
-Commit and push to AUR:
+Manual forced packaging workflow:
 
 ```bash
-git add PKGBUILD .SRCINFO
-git commit -m "update to 0.1.3"
-git push
+gh workflow run publish-aur.yml --repo eggfriedrice24/rune-notes-bin -f force_publish=true
 ```
-
-Do not commit local `makepkg` artifacts such as `pkg/`, `src/`, `.deb`, or `.pkg.tar.zst` files.
 
 ## Automation Later
 
-Automate only after this manual path is stable for a few releases. Good first automation targets:
+Good next automation targets:
 
 - A release validation workflow that runs `bun release:check` or its CI-safe subset.
-- A script that prepares the AUR `PKGBUILD` and `.SRCINFO` from a GitHub release asset.
 - A guarded MCP publish workflow with npm provenance.
+- A post-release verification script that checks GitHub release assets and AUR package version.
