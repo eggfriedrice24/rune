@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.4 - 2026-05-17
+
+- Added a desktop system tray icon with open and quit actions so rune appears in tray hosts such as Waybar.
+
 ## 0.1.3 - 2026-05-17
 
 - Added incremental SQLite indexing for MCP and desktop search, including cleanup for deleted notes.
