@@ -33,7 +33,7 @@ If no library is provided, call `library.create` from the connected MCP client b
 - `note.write`
 - `note.delete`
 
-`note.search` rebuilds the derived SQLite index at `<library>/.rune/index.db` from the current Markdown files before querying it. The index searches note paths, filenames, Markdown heading titles, and note body content.
+`note.search` incrementally syncs the derived SQLite index at `<library>/.rune/index.db` before querying it. The index searches note paths, filenames, Markdown heading titles, and note body content.
 
 ## Privacy
 

@@ -128,7 +128,15 @@ test("search rebuilds the index from changed markdown files", async () => {
     content: "# Draft\n\nNo special keyword yet.\n",
   });
 
-  expect((await searchLibraryNotes({ libraryPath, query: "needleword" })).results).toEqual([]);
+  const firstSearch = await searchLibraryNotes({ libraryPath, query: "needleword" });
+
+  expect(firstSearch.results).toEqual([]);
+  expect(firstSearch).toMatchObject({
+    changedNoteCount: 2,
+    deletedNoteCount: 0,
+    indexedNoteCount: 2,
+    unchangedNoteCount: 0,
+  });
 
   await writeNote({
     libraryPath,
@@ -136,9 +144,39 @@ test("search rebuilds the index from changed markdown files", async () => {
     content: "# Draft\n\nThe needleword appears after the first search.\n",
   });
 
-  expect((await searchLibraryNotes({ libraryPath, query: "needleword" })).results).toMatchObject([
-    { path: "draft.md", title: "Draft" },
+  const secondSearch = await searchLibraryNotes({ libraryPath, query: "needleword" });
+
+  expect(secondSearch.results).toMatchObject([{ path: "draft.md", title: "Draft" }]);
+  expect(secondSearch).toMatchObject({
+    changedNoteCount: 1,
+    deletedNoteCount: 0,
+    indexedNoteCount: 2,
+    unchangedNoteCount: 1,
+  });
+});
+
+test("search removes deleted markdown files from the incremental index", async () => {
+  const libraryPath = await createTempLibrary();
+  await writeNote({
+    libraryPath,
+    filename: "temporary.md",
+    content: "# Temporary\n\nThis note has vanishword before deletion.\n",
+  });
+
+  expect((await searchLibraryNotes({ libraryPath, query: "vanishword" })).results).toMatchObject([
+    { path: "temporary.md", title: "Temporary" },
   ]);
+
+  await deleteNote({ libraryPath, filename: "temporary.md" });
+  const search = await searchLibraryNotes({ libraryPath, query: "vanishword" });
+
+  expect(search.results).toEqual([]);
+  expect(search).toMatchObject({
+    changedNoteCount: 0,
+    deletedNoteCount: 1,
+    indexedNoteCount: 1,
+    unchangedNoteCount: 1,
+  });
 });
 
 test("rejects note writes when the notebook is missing", async () => {

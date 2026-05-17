@@ -1,24 +1,46 @@
 import { titleFromMarkdown } from "@rune/core";
-import { rebuildNoteIndex, searchNoteIndex, type NoteIndexRecord } from "@rune/db";
+import {
+  changedNoteMetadata,
+  listIndexedNoteMetadata,
+  rebuildNoteIndex,
+  searchNoteIndex,
+  syncNoteIndex,
+  type NoteIndexMetadata,
+  type NoteIndexRecord,
+} from "@rune/db";
 
-import { listNotes, readNote } from "./library.ts";
+import { listNotes, readNote, type NoteEntry } from "./library.ts";
 import { withLibraryIndexDb } from "./db.ts";
+
+type SearchableNote = NoteIndexMetadata & Pick<NoteEntry, "name" | "notebook">;
 
 export async function searchLibraryNotes(input: {
   libraryPath: string;
   query: string;
   limit?: number | undefined;
 }) {
-  const indexed = await rebuildLibraryIndex(input.libraryPath);
-  const results = await withLibraryIndexDb(input.libraryPath, (db) =>
-    searchNoteIndex(db, input.query, input.limit === undefined ? {} : { limit: input.limit }),
-  );
+  const currentNotes = await noteIndexMetadata(input.libraryPath);
 
-  return {
-    query: input.query,
-    indexedNoteCount: indexed.noteCount,
-    results,
-  };
+  return withLibraryIndexDb(input.libraryPath, async (db) => {
+    const changedNotes = changedNoteMetadata(currentNotes, listIndexedNoteMetadata(db));
+    const synced = syncNoteIndex(db, {
+      changedNotes: await noteIndexRecordsForNotes(input.libraryPath, changedNotes),
+      currentNotes,
+    });
+
+    return {
+      query: input.query,
+      changedNoteCount: synced.changedNoteCount,
+      deletedNoteCount: synced.deletedNoteCount,
+      indexedNoteCount: synced.indexedNoteCount,
+      results: searchNoteIndex(
+        db,
+        input.query,
+        input.limit === undefined ? {} : { limit: input.limit },
+      ),
+      unchangedNoteCount: synced.unchangedNoteCount,
+    };
+  });
 }
 
 export async function rebuildLibraryIndex(libraryPath: string) {
@@ -28,8 +50,15 @@ export async function rebuildLibraryIndex(libraryPath: string) {
 }
 
 async function noteIndexRecords(libraryPath: string): Promise<NoteIndexRecord[]> {
+  return noteIndexRecordsForNotes(libraryPath, await noteIndexMetadata(libraryPath));
+}
+
+async function noteIndexRecordsForNotes(
+  libraryPath: string,
+  notes: readonly SearchableNote[],
+): Promise<NoteIndexRecord[]> {
   return Promise.all(
-    (await listNotes(libraryPath)).map(async (note) => {
+    notes.map(async (note) => {
       const content = (
         await readNote({
           libraryPath,
@@ -49,4 +78,14 @@ async function noteIndexRecords(libraryPath: string): Promise<NoteIndexRecord[]>
       };
     }),
   );
+}
+
+async function noteIndexMetadata(libraryPath: string): Promise<SearchableNote[]> {
+  return (await listNotes(libraryPath)).map((note) => ({
+    name: note.name,
+    notebook: note.notebook,
+    path: note.path,
+    size: note.size,
+    updatedAt: Math.trunc(note.updatedAt),
+  }));
 }

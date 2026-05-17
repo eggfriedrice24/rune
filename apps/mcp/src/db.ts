@@ -8,12 +8,15 @@ type OpenRuneDb = RuneDb & {
   close: () => void;
 };
 
-export async function withLibraryIndexDb<T>(libraryPath: string, fn: (db: RuneDb) => T) {
+export async function withLibraryIndexDb<T>(
+  libraryPath: string,
+  fn: (db: RuneDb) => T | Promise<T>,
+) {
   await mkdir(nodePath.join(libraryPath, ".rune"), { recursive: true });
   const db = openRuneDb(nodePath.join(libraryPath, ".rune", "index.db"));
 
   try {
-    return fn(db);
+    return await fn(db);
   } finally {
     db.close();
   }
