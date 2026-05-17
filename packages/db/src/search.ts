@@ -23,6 +23,20 @@ export type NoteIndexRecord = {
   updatedAt: number;
 };
 
+export type NoteIndexMetadata = Pick<NoteIndexRecord, "path" | "size" | "updatedAt">;
+
+export type NoteIndexSyncInput = {
+  currentNotes: readonly NoteIndexMetadata[];
+  changedNotes: readonly NoteIndexRecord[];
+};
+
+export type NoteIndexSyncResult = {
+  changedNoteCount: number;
+  deletedNoteCount: number;
+  indexedNoteCount: number;
+  unchangedNoteCount: number;
+};
+
 export type NoteSearchResult = {
   path: string;
   notebook: string;
@@ -63,6 +77,60 @@ export async function rebuildNoteIndexAsync(db: AsyncRuneDb, notes: readonly Not
   });
 
   return { noteCount: notes.length };
+}
+
+export function listIndexedNoteMetadata(db: RuneDb): NoteIndexMetadata[] {
+  initializeLibraryIndex(db);
+
+  return db.all("SELECT path, size, updated_at FROM notes").map(noteIndexMetadataFromRow);
+}
+
+export async function listIndexedNoteMetadataAsync(db: AsyncRuneDb): Promise<NoteIndexMetadata[]> {
+  await initializeLibraryIndexAsync(db);
+
+  return (await db.all("SELECT path, size, updated_at FROM notes")).map(noteIndexMetadataFromRow);
+}
+
+export function changedNoteMetadata<T extends NoteIndexMetadata>(
+  currentNotes: readonly T[],
+  indexedNotes: readonly NoteIndexMetadata[],
+) {
+  const indexedByPath = new Map(indexedNotes.map((note) => [note.path, note]));
+
+  return currentNotes.filter((note) => {
+    const indexed = indexedByPath.get(note.path);
+
+    return !indexed || indexed.size !== note.size || indexed.updatedAt !== note.updatedAt;
+  });
+}
+
+export function syncNoteIndex(db: RuneDb, input: NoteIndexSyncInput): NoteIndexSyncResult {
+  initializeLibraryIndex(db);
+  const indexedNotes = listIndexedNoteMetadata(db);
+  const deletedPaths = deletedIndexedPaths(input.currentNotes, indexedNotes);
+
+  db.transaction(() => {
+    deletedPaths.forEach((path) => deleteNoteIndexRecord(db, path));
+    input.changedNotes.forEach((note) => upsertNoteIndexRecord(db, note));
+  });
+
+  return noteIndexSyncResult(input, deletedPaths.length);
+}
+
+export async function syncNoteIndexAsync(
+  db: AsyncRuneDb,
+  input: NoteIndexSyncInput,
+): Promise<NoteIndexSyncResult> {
+  await initializeLibraryIndexAsync(db);
+  const indexedNotes = await listIndexedNoteMetadataAsync(db);
+  const deletedPaths = deletedIndexedPaths(input.currentNotes, indexedNotes);
+
+  await db.transaction(async () => {
+    await Promise.all(deletedPaths.map((path) => deleteNoteIndexRecordAsync(db, path)));
+    await Promise.all(input.changedNotes.map((note) => upsertNoteIndexRecordAsync(db, note)));
+  });
+
+  return noteIndexSyncResult(input, deletedPaths.length);
 }
 
 export function searchNoteIndex(
@@ -144,6 +212,14 @@ function noteSearchResultFromRow(row: SqlRow): NoteSearchResult {
   };
 }
 
+function noteIndexMetadataFromRow(row: SqlRow): NoteIndexMetadata {
+  return {
+    path: stringValue(row, "path"),
+    size: numberValue(row, "size"),
+    updatedAt: numberValue(row, "updated_at"),
+  };
+}
+
 function libraryIndexSetupStatements() {
   return [
     "PRAGMA foreign_keys = ON",
@@ -194,6 +270,32 @@ function insertNoteIndexRecord(db: RuneDb, note: NoteIndexRecord) {
   ]);
 }
 
+function upsertNoteIndexRecord(db: RuneDb, note: NoteIndexRecord) {
+  db.run(
+    `INSERT INTO notes (path, notebook, name, title, size, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(path) DO UPDATE SET
+      notebook = excluded.notebook,
+      name = excluded.name,
+      title = excluded.title,
+      size = excluded.size,
+      updated_at = excluded.updated_at`,
+    [note.path, note.notebook, note.name, note.title, note.size, note.updatedAt],
+  );
+  db.run("DELETE FROM note_search WHERE path = ?", [note.path]);
+  db.run("INSERT INTO note_search (path, name, title, content) VALUES (?, ?, ?, ?)", [
+    note.path,
+    note.name,
+    note.title,
+    note.content,
+  ]);
+}
+
+function deleteNoteIndexRecord(db: RuneDb, path: string) {
+  db.run("DELETE FROM note_search WHERE path = ?", [path]);
+  db.run("DELETE FROM notes WHERE path = ?", [path]);
+}
+
 async function insertNoteIndexRecordAsync(db: AsyncRuneDb, note: NoteIndexRecord) {
   await db.run(
     `INSERT INTO notes (path, notebook, name, title, size, updated_at)
@@ -206,6 +308,53 @@ async function insertNoteIndexRecordAsync(db: AsyncRuneDb, note: NoteIndexRecord
     note.title,
     note.content,
   ]);
+}
+
+async function upsertNoteIndexRecordAsync(db: AsyncRuneDb, note: NoteIndexRecord) {
+  await db.run(
+    `INSERT INTO notes (path, notebook, name, title, size, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?)
+    ON CONFLICT(path) DO UPDATE SET
+      notebook = excluded.notebook,
+      name = excluded.name,
+      title = excluded.title,
+      size = excluded.size,
+      updated_at = excluded.updated_at`,
+    [note.path, note.notebook, note.name, note.title, note.size, note.updatedAt],
+  );
+  await db.run("DELETE FROM note_search WHERE path = ?", [note.path]);
+  await db.run("INSERT INTO note_search (path, name, title, content) VALUES (?, ?, ?, ?)", [
+    note.path,
+    note.name,
+    note.title,
+    note.content,
+  ]);
+}
+
+async function deleteNoteIndexRecordAsync(db: AsyncRuneDb, path: string) {
+  await db.run("DELETE FROM note_search WHERE path = ?", [path]);
+  await db.run("DELETE FROM notes WHERE path = ?", [path]);
+}
+
+function deletedIndexedPaths(
+  currentNotes: readonly NoteIndexMetadata[],
+  indexedNotes: readonly NoteIndexMetadata[],
+) {
+  const currentPaths = new Set(currentNotes.map((note) => note.path));
+
+  return indexedNotes.map((note) => note.path).filter((path) => !currentPaths.has(path));
+}
+
+function noteIndexSyncResult(
+  input: NoteIndexSyncInput,
+  deletedNoteCount: number,
+): NoteIndexSyncResult {
+  return {
+    changedNoteCount: input.changedNotes.length,
+    deletedNoteCount,
+    indexedNoteCount: input.currentNotes.length,
+    unchangedNoteCount: Math.max(input.currentNotes.length - input.changedNotes.length, 0),
+  };
 }
 
 async function runStatementsAsync(db: AsyncRuneDb, statements: readonly string[]) {
