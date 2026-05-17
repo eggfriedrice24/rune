@@ -5,6 +5,7 @@ import * as React from "react";
 import { AppHeader } from "@/components/app-header";
 import { EditorShell } from "@/components/editor-shell";
 import { RuneLogo } from "@/components/rune-logo";
+import { useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
 import { CommandPalette } from "@/features/command/components/command-palette";
 import { useEditorSettingsStore } from "@/features/editor/store/editor-settings";
@@ -25,6 +26,7 @@ export function App() {
   const [deleteTarget, setDeleteTarget] = React.useState<DeleteLibraryEntryTarget | null>(null);
   const [keybindingsOpen, setKeybindingsOpen] = React.useState(false);
   const [libraryDialogOpen, setLibraryDialogOpen] = React.useState(false);
+  const { toggleTheme } = useTheme();
 
   const libraryPath = useLibraryStore((state) => state.libraryPath);
   const reloadLibrary = useLibraryStore((state) => state.reload);
@@ -40,6 +42,7 @@ export function App() {
     "library.open": () => setLibraryDialogOpen(true),
     "preview.toggle": togglePreviewPane,
     "reading.toggle": toggleLivePreview,
+    "theme.toggle": toggleTheme,
   });
 
   React.useEffect(() => {
@@ -104,6 +107,7 @@ export function App() {
         onDeleteEntry={setDeleteTarget}
         onOpenLibraryDialog={() => setLibraryDialogOpen(true)}
         onShowKeybindings={() => setKeybindingsOpen(true)}
+        onToggleTheme={toggleTheme}
         onTogglePreviewPane={togglePreviewPane}
         onToggleReadingMode={toggleLivePreview}
       />

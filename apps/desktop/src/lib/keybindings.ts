@@ -9,7 +9,8 @@ export type KeybindingId =
   | "preview.toggle"
   | "reading.toggle"
   | "library.open"
-  | "editor.vim.toggle";
+  | "editor.vim.toggle"
+  | "theme.toggle";
 
 export type KeybindingDefinition = {
   id: KeybindingId;
@@ -49,6 +50,11 @@ export const KEYBINDING_DEFINITIONS: Record<KeybindingId, KeybindingDefinition> 
     label: "Toggle vim mode",
     defaultHotkey: "Mod+Shift+V",
   },
+  "theme.toggle": {
+    id: "theme.toggle",
+    label: "Toggle theme",
+    defaultHotkey: "Mod+Shift+T",
+  },
 };
 
 const DEFAULT_BINDINGS: Record<KeybindingId, string> = {
@@ -58,6 +64,7 @@ const DEFAULT_BINDINGS: Record<KeybindingId, string> = {
   "reading.toggle": "Mod+R",
   "library.open": "Mod+O",
   "editor.vim.toggle": "Mod+Shift+V",
+  "theme.toggle": "Mod+Shift+T",
 };
 
 type KeybindingsState = {
@@ -83,6 +90,7 @@ function normalizeBindings(bindings: Partial<Record<KeybindingId, string>> | und
     "library.open": bindings["library.open"] ?? DEFAULT_BINDINGS["library.open"],
     "preview.toggle": bindings["preview.toggle"] ?? DEFAULT_BINDINGS["preview.toggle"],
     "reading.toggle": bindings["reading.toggle"] ?? DEFAULT_BINDINGS["reading.toggle"],
+    "theme.toggle": bindings["theme.toggle"] ?? DEFAULT_BINDINGS["theme.toggle"],
   };
 }
 
@@ -97,7 +105,7 @@ export const useKeybindingsStore = create<KeybindingsState>()(
     {
       name: "rune.keybindings",
       storage: createJSONStorage(() => tauriStoreStorage),
-      version: 5,
+      version: 6,
       migrate: (persistedState) => {
         if (
           !persistedState ||

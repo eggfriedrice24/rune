@@ -1,5 +1,6 @@
 import {
   BookOpen02Icon,
+  DarkModeIcon,
   FileIcon,
   FilePlusIcon,
   FolderAddIcon,
@@ -35,6 +36,7 @@ type CommandPaletteProps = {
   onOpenLibraryDialog: () => void;
   onOpenChange: (open: boolean) => void;
   onShowKeybindings: () => void;
+  onToggleTheme: () => void;
   onTogglePreviewPane: () => void;
   onToggleReadingMode: () => void;
 };
@@ -98,6 +100,7 @@ export function CommandPalette({
   onOpenLibraryDialog,
   onOpenChange,
   onShowKeybindings,
+  onToggleTheme,
   onTogglePreviewPane,
   onToggleReadingMode,
 }: CommandPaletteProps) {
@@ -142,6 +145,7 @@ export function CommandPalette({
       "new notebook",
       "open existing library",
       "show keybindings",
+      "toggle theme",
       "toggle preview pane",
       "toggle reading mode",
       ...recents.map((path) => `switch library ${basename(path)}`),
@@ -279,6 +283,11 @@ export function CommandPalette({
             <HugeiconsIcon icon={ViewIcon} strokeWidth={2} />
             Toggle preview pane
             <CommandShortcut>Mod+P</CommandShortcut>
+          </CommandItem>
+          <CommandItem value="toggle theme" onSelect={() => run(onToggleTheme)}>
+            <HugeiconsIcon icon={DarkModeIcon} strokeWidth={2} />
+            Toggle theme
+            <CommandShortcut>Mod+Shift+T</CommandShortcut>
           </CommandItem>
           <CommandItem value="toggle reading mode" onSelect={() => run(onToggleReadingMode)}>
             <HugeiconsIcon icon={BookOpen02Icon} strokeWidth={2} />
