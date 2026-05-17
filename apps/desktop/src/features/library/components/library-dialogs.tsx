@@ -3,6 +3,16 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "@/components/ui/command";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -41,9 +51,19 @@ export function LibraryDialogs({
   onDeleteTargetChange,
   onLibraryDialogOpenChange,
 }: LibraryDialogsProps) {
+  const [createLibraryDialogOpen, setCreateLibraryDialogOpen] = React.useState(false);
+
   return (
     <>
-      <LibraryManagerDialog open={libraryDialogOpen} onOpenChange={onLibraryDialogOpenChange} />
+      <LibraryManagerDialog
+        open={libraryDialogOpen}
+        onOpenChange={onLibraryDialogOpenChange}
+        onCreateLibrary={() => setCreateLibraryDialogOpen(true)}
+      />
+      <CreateLibraryDialog
+        open={createLibraryDialogOpen}
+        onOpenChange={setCreateLibraryDialogOpen}
+      />
       <CreateNoteDialog
         open={createDialog === "note"}
         onOpenChange={(open) => onCreateDialogChange(open ? "note" : null)}
@@ -59,6 +79,84 @@ export function LibraryDialogs({
 
 function LibraryManagerDialog({
   open,
+  onCreateLibrary,
+  onOpenChange,
+}: {
+  open: boolean;
+  onCreateLibrary: () => void;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const currentLibraryPath = useLibraryStore((state) => state.libraryPath);
+  const closeLibrary = useLibraryStore((state) => state.closeLibrary);
+  const openLibrary = useLibraryStore((state) => state.openLibrary);
+  const recents = useRecentLibrariesStore((state) => state.recents);
+
+  const run = React.useCallback(
+    (action: () => void | Promise<void>) => {
+      void Promise.resolve(action()).then(() => onOpenChange(false));
+    },
+    [onOpenChange],
+  );
+
+  return (
+    <CommandDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Library"
+      description="Switch recent libraries, create a local rune library, or import an existing folder."
+      className="sm:max-w-lg"
+      showCloseButton
+    >
+      <CommandInput placeholder="Search libraries or actions..." />
+      <CommandList>
+        <CommandEmpty>No library found.</CommandEmpty>
+        {recents.length > 0 ? (
+          <CommandGroup heading="Recent libraries">
+            {recents.map((path) => (
+              <CommandItem
+                key={path}
+                value={`recent ${path}`}
+                data-checked={path === currentLibraryPath ? true : undefined}
+                onSelect={() => run(() => openLibrary(path))}
+              >
+                <span className="truncate">{path}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ) : null}
+        <CommandSeparator />
+        <CommandGroup heading="Actions">
+          <CommandItem
+            value="create library new local notes"
+            onSelect={() => {
+              onOpenChange(false);
+              onCreateLibrary();
+            }}
+          >
+            <span>Create library</span>
+            <CommandShortcut>new</CommandShortcut>
+          </CommandItem>
+          <CommandItem
+            value="open existing folder import library"
+            onSelect={() => run(openLibrary)}
+          >
+            <span>Open existing folder</span>
+            <CommandShortcut>folder</CommandShortcut>
+          </CommandItem>
+          {currentLibraryPath ? (
+            <CommandItem value="close current library" onSelect={() => run(closeLibrary)}>
+              <span>Close library</span>
+              <CommandShortcut>close</CommandShortcut>
+            </CommandItem>
+          ) : null}
+        </CommandGroup>
+      </CommandList>
+    </CommandDialog>
+  );
+}
+
+function CreateLibraryDialog({
+  open,
   onOpenChange,
 }: {
   open: boolean;
@@ -66,13 +164,9 @@ function LibraryManagerDialog({
 }) {
   const [name, setName] = React.useState("");
   const [defaultRoot, setDefaultRoot] = React.useState<string | null>(null);
-  const currentLibraryPath = useLibraryStore((state) => state.libraryPath);
   const createLibrary = useLibraryStore((state) => state.createLibrary);
-  const closeLibrary = useLibraryStore((state) => state.closeLibrary);
-  const openLibrary = useLibraryStore((state) => state.openLibrary);
   const status = useLibraryStore((state) => state.status);
   const error = useLibraryStore((state) => state.error);
-  const recents = useRecentLibrariesStore((state) => state.recents);
   const folderName = libraryFolderName(name);
 
   React.useEffect(() => {
@@ -103,43 +197,9 @@ function LibraryManagerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Library</DialogTitle>
-          <DialogDescription>
-            Create a local rune library, switch recent libraries, or import an existing folder.
-          </DialogDescription>
+          <DialogTitle>Create library</DialogTitle>
+          <DialogDescription>Create a local rune library in your notes folder.</DialogDescription>
         </DialogHeader>
-        <div className="flex flex-col gap-4">
-          {currentLibraryPath ? (
-            <FieldGroup>
-              <Field>
-                <FieldLabel>Current library</FieldLabel>
-                <FieldDescription className="break-all">{currentLibraryPath}</FieldDescription>
-              </Field>
-            </FieldGroup>
-          ) : null}
-          {recents.length > 0 ? (
-            <FieldGroup>
-              <Field>
-                <FieldLabel>Recent libraries</FieldLabel>
-                <div className="flex flex-col gap-1">
-                  {recents.map((path) => (
-                    <Button
-                      key={path}
-                      type="button"
-                      variant={path === currentLibraryPath ? "secondary" : "ghost"}
-                      className="justify-start"
-                      onClick={() => {
-                        void openLibrary(path).then(() => onOpenChange(false));
-                      }}
-                    >
-                      <span className="truncate">{path}</span>
-                    </Button>
-                  ))}
-                </div>
-              </Field>
-            </FieldGroup>
-          ) : null}
-        </div>
         <form
           className="flex flex-col gap-4"
           onSubmit={(event) => {
@@ -176,25 +236,6 @@ function LibraryManagerDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void openLibrary().then(() => onOpenChange(false))}
-            >
-              Open existing folder
-            </Button>
-            {currentLibraryPath ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  closeLibrary();
-                  onOpenChange(false);
-                }}
-              >
-                Close library
-              </Button>
-            ) : null}
             <Button type="submit" disabled={!folderName || status === "loading"}>
               Create library
             </Button>

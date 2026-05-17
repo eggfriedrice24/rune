@@ -108,6 +108,7 @@ export function CommandPalette({
   const libraryPath = useLibraryStore((state) => state.libraryPath);
   const selectedNotebookPath = useLibraryStore((state) => state.selectedNotebookPath);
   const tree = useLibraryStore((state) => state.tree);
+  const openLibrary = useLibraryStore((state) => state.openLibrary);
   const selectNotebook = useLibraryStore((state) => state.selectNotebook);
   const recents = useRecentLibrariesStore((state) => state.recents);
   const openFile = useEditorStore((state) => state.openFile);
@@ -136,8 +137,7 @@ export function CommandPalette({
 
   const autocompleteValues = React.useMemo(
     () => [
-      "create library",
-      "change library",
+      "library actions",
       "new note",
       "new notebook",
       "open existing library",
@@ -209,14 +209,6 @@ export function CommandPalette({
         <CommandEmpty>No command, library, or note found.</CommandEmpty>
         <CommandGroup heading="Create">
           <CommandItem
-            value="create library"
-            keywords={["new library", "add library"]}
-            onSelect={() => run(onOpenLibraryDialog)}
-          >
-            <HugeiconsIcon icon={FolderAddIcon} strokeWidth={2} />
-            Create library
-          </CommandItem>
-          <CommandItem
             value="new note"
             keywords={["add note", "create note", targetLabel]}
             disabled={!libraryPath}
@@ -238,14 +230,22 @@ export function CommandPalette({
           </CommandItem>
         </CommandGroup>
         <CommandSeparator />
-        <CommandGroup heading="Library">
+        <CommandGroup heading="Library Actions">
           <CommandItem
-            value="change library"
-            keywords={["switch library", "open existing library", "open folder"]}
+            value="library actions"
+            keywords={[
+              "change library",
+              "create library",
+              "manage library",
+              "new library",
+              "open existing library",
+              "open folder",
+              "switch library",
+            ]}
             onSelect={() => run(onOpenLibraryDialog)}
           >
             <HugeiconsIcon icon={FolderOpenIcon} strokeWidth={2} />
-            Change library
+            Library actions
             <CommandShortcut>Mod+O</CommandShortcut>
           </CommandItem>
           {recents.map((path) => (
@@ -253,7 +253,7 @@ export function CommandPalette({
               key={path}
               value={`switch library ${basename(path)} ${path}`}
               keywords={[basename(path), path, "recent library"]}
-              onSelect={() => run(onOpenLibraryDialog)}
+              onSelect={() => run(() => openLibrary(path))}
             >
               <HugeiconsIcon icon={FolderOpenIcon} strokeWidth={2} className="text-chart-2" />
               <div className="min-w-0 flex-1">
