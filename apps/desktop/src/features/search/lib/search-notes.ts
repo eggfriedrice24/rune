@@ -1,10 +1,13 @@
 import Database from "@tauri-apps/plugin-sql";
-import { mkdir, readTextFile } from "@tauri-apps/plugin-fs";
+import { mkdir, readTextFile, stat } from "@tauri-apps/plugin-fs";
 
 import { basename, titleFromMarkdown, type LibraryNode } from "@rune/core";
 import {
-  rebuildNoteIndexAsync,
+  changedNoteMetadata,
+  listIndexedNoteMetadataAsync,
   searchNoteIndexAsync,
+  syncNoteIndexAsync,
+  type NoteIndexMetadata,
   type NoteIndexRecord,
   type SqlRow,
   type SqlValue,
@@ -21,10 +24,15 @@ export type NoteSearchResult = {
   snippet: string;
 };
 
-type SearchableNote = {
+type SearchableNote = NoteIndexMetadata & {
+  absolutePath: string;
+  name: string;
+};
+
+type TreeNote = {
+  name: string;
   path: string;
   relativePath: string;
-  name: string;
 };
 
 type OpenLibraryIndexDb = {
@@ -48,10 +56,17 @@ export async function searchLibraryNotes(input: {
 
   const db = await openLibraryIndex(input.libraryPath);
   try {
-    await rebuildNoteIndexAsync(
-      db,
-      await noteIndexRecords(await readLibraryTree(input.libraryPath), input.libraryPath),
+    const currentNotes = await noteIndexMetadata(
+      await readLibraryTree(input.libraryPath),
+      input.libraryPath,
     );
+
+    await syncNoteIndexAsync(db, {
+      changedNotes: await noteIndexRecords(
+        changedNoteMetadata(currentNotes, await listIndexedNoteMetadataAsync(db)),
+      ),
+      currentNotes,
+    });
 
     return Promise.all(
       (await searchNoteIndexAsync(db, input.query, { limit: input.limit ?? DEFAULT_LIMIT })).map(
@@ -111,34 +126,55 @@ function firstTokenColumn(line: string, tokens: readonly string[]) {
   return columns[0] ?? 0;
 }
 
-async function noteIndexRecords(
-  nodes: LibraryNode[],
-  libraryPath: string,
-): Promise<NoteIndexRecord[]> {
+async function noteIndexRecords(notes: readonly SearchableNote[]): Promise<NoteIndexRecord[]> {
   return (
     await Promise.all(
-      noteEntries(nodes, libraryPath).map(async (note) => {
-        const content = await readTextFile(note.path).catch(() => null);
+      notes.map(async (note) => {
+        const content = await readTextFile(note.absolutePath).catch(() => null);
         if (content === null) {
           return null;
         }
 
         return {
-          path: note.relativePath,
-          notebook: notebookPathFromNotePath(note.relativePath),
+          path: note.path,
+          notebook: notebookPathFromNotePath(note.path),
           name: note.name,
-          title: titleFromMarkdown(content, basename(note.path)),
+          title: titleFromMarkdown(content, basename(note.absolutePath)),
           content,
-          size: content.length,
-          updatedAt: Date.now(),
+          size: note.size,
+          updatedAt: note.updatedAt,
         };
       }),
     )
   ).filter((record): record is NoteIndexRecord => Boolean(record));
 }
 
-function noteEntries(nodes: LibraryNode[], libraryPath: string): SearchableNote[] {
-  return nodes.flatMap((node): SearchableNote[] => {
+async function noteIndexMetadata(
+  nodes: LibraryNode[],
+  libraryPath: string,
+): Promise<SearchableNote[]> {
+  return (
+    await Promise.all(
+      noteEntries(nodes, libraryPath).map(async (note) => {
+        const fileInfo = await stat(note.path).catch(() => null);
+        if (!fileInfo?.isFile) {
+          return null;
+        }
+
+        return {
+          absolutePath: note.path,
+          name: note.name,
+          path: note.relativePath,
+          size: fileInfo.size,
+          updatedAt: updatedAtFromMtime(fileInfo.mtime),
+        };
+      }),
+    )
+  ).filter((note): note is SearchableNote => Boolean(note));
+}
+
+function noteEntries(nodes: LibraryNode[], libraryPath: string): TreeNote[] {
+  return nodes.flatMap((node): TreeNote[] => {
     if (node.type === "file") {
       return [
         {
@@ -158,6 +194,10 @@ function relativePath(libraryPath: string, path: string) {
     .slice(libraryPath.length)
     .replace(/^[\\/]+/, "")
     .replace(/\\/g, "/");
+}
+
+function updatedAtFromMtime(mtime: Date | null) {
+  return mtime ? Math.trunc(mtime.getTime()) : Date.now();
 }
 
 async function openLibraryIndex(libraryPath: string): Promise<OpenLibraryIndexDb> {
