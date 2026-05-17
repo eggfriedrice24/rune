@@ -9,13 +9,19 @@ The server exposes tools for AI agents to create libraries, create notebooks, li
 Run against an existing library:
 
 ```bash
-bun --cwd apps/mcp run dev -- --library ~/notes/rune/personal
+bunx @rune/mcp --library ~/notes/rune/personal
 ```
 
 Show CLI help:
 
 ```bash
-bun --cwd apps/mcp run dev -- --help
+bunx @rune/mcp --help
+```
+
+Run from this repository during development:
+
+```bash
+bun --cwd apps/mcp run dev -- --library ~/notes/rune/personal
 ```
 
 If no library is provided, call `library.create` from the connected MCP client before using note or notebook tools.

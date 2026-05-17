@@ -66,19 +66,17 @@
       "name": "@rune/mcp",
       "version": "0.0.1",
       "bin": {
-        "rune-mcp": "./src/index.ts",
+        "rune-mcp": "./dist/index.js",
       },
-      "dependencies": {
+      "devDependencies": {
         "@cfworker/json-schema": "catalog:",
         "@modelcontextprotocol/server": "catalog:",
         "@rune/core": "workspace:*",
         "@rune/db": "workspace:*",
-        "zod": "catalog:",
-      },
-      "devDependencies": {
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
         "typescript": "catalog:",
+        "zod": "catalog:",
       },
     },
     "packages/core": {

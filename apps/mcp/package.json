@@ -26,15 +26,15 @@
     "directory": "apps/mcp"
   },
   "bin": {
-    "rune-mcp": "./src/index.ts"
+    "rune-mcp": "./dist/index.js"
   },
   "files": [
     "README.md",
-    "src"
+    "dist"
   ],
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./dist/index.js"
   },
   "publishConfig": {
     "access": "public"
@@ -42,19 +42,18 @@
   "scripts": {
     "build": "bun build ./src/index.ts --target=bun --outfile=dist/index.js",
     "dev": "bun run ./src/index.ts",
+    "prepack": "bun run build",
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
-  "dependencies": {
+  "devDependencies": {
     "@cfworker/json-schema": "catalog:",
     "@modelcontextprotocol/server": "catalog:",
     "@rune/core": "workspace:*",
     "@rune/db": "workspace:*",
-    "zod": "catalog:"
-  },
-  "devDependencies": {
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "zod": "catalog:"
   }
 }
