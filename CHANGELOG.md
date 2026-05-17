@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.3 - 2026-05-17
+
+- Added incremental SQLite indexing for MCP and desktop search, including cleanup for deleted notes.
+- Streamlined library actions with command-palette navigation and direct recent-library switching.
+- Moved theme persistence to Tauri Store and added a configurable theme toggle keybinding.
+- Prepared the MCP package to publish from bundled Bun output.
+- Added a release validation script and documented the manual desktop, MCP, and AUR release flow.
+
 ## 0.1.2 - 2026-05-11
 
 - Replaced the sidebar-centered desktop UI with a command-palette-first workflow and a compact app header.
